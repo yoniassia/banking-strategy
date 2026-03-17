@@ -1,0 +1,2178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SuperApp — The Banking Pillar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #111118;
+  --bg-card: #16161f;
+  --bg-card-hover: #1c1c28;
+  --text-primary: #f0f0f5;
+  --text-secondary: #9595a8;
+  --text-muted: #65657a;
+  --accent: #00c853;
+  --accent-dim: rgba(0, 200, 83, 0.15);
+  --accent-glow: rgba(0, 200, 83, 0.3);
+  --border: rgba(255, 255, 255, 0.06);
+  --border-accent: rgba(0, 200, 83, 0.25);
+  --gradient-1: linear-gradient(135deg, #00c853 0%, #00e676 100%);
+  --gradient-2: linear-gradient(135deg, rgba(0, 200, 83, 0.1) 0%, rgba(0, 230, 118, 0.05) 100%);
+}
+
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.7;
+  overflow-x: hidden;
+  padding-top: 56px;
+}
+
+/* ── TOP NAV BAR ── */
+.top-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+  background: rgba(10, 10, 15, 0.95);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 24px;
+  transition: box-shadow 0.3s;
+}
+.top-nav.scrolled { box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4); }
+.top-nav-brand {
+  font-weight: 700; font-size: 1rem;
+  background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  white-space: nowrap;
+}
+
+/* ── TABLE OF CONTENTS (inside hero) ── */
+.toc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+  max-width: 900px;
+  margin: 40px auto 0;
+}
+.toc-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-size: 0.88rem; font-weight: 500;
+  transition: all 0.25s;
+}
+.toc-item:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-accent);
+  color: var(--text-primary);
+  transform: translateY(-2px);
+}
+.toc-num {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-radius: 8px;
+  font-size: 0.75rem; font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  flex-shrink: 0;
+}
+.toc-item:hover .toc-num { background: var(--accent); color: var(--bg-primary); }
+.toc-item.done .toc-num { background: var(--accent); color: var(--bg-primary); }
+.toc-item.done { border-color: var(--border-accent); }
+.toc-item.coming { opacity: 0.5; }
+@media (max-width: 600px) {
+  .toc-grid { grid-template-columns: 1fr; }
+}
+
+/* ── PASSWORD GATE ── */
+#password-gate {
+  position: fixed; inset: 0; z-index: 10000;
+  background: var(--bg-primary);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 24px;
+  transition: opacity 0.5s, visibility 0.5s;
+}
+#password-gate.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+#password-gate .gate-logo {
+  font-size: 2.5rem; font-weight: 800;
+  background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: -1px;
+}
+#password-gate .gate-sub { color: var(--text-muted); font-size: 0.9rem; margin-top: -12px; }
+#password-gate input {
+  background: var(--bg-card); border: 1px solid var(--border);
+  color: var(--text-primary); padding: 14px 24px; border-radius: 12px;
+  font-size: 1rem; font-family: inherit; width: 300px; text-align: center;
+  outline: none; transition: border-color 0.3s;
+}
+#password-gate input:focus { border-color: var(--accent); }
+#password-gate input::placeholder { color: var(--text-muted); }
+#password-gate .gate-btn {
+  background: var(--gradient-1); color: #000; border: none;
+  padding: 12px 40px; border-radius: 12px; font-weight: 600;
+  font-size: 0.95rem; cursor: pointer; transition: transform 0.2s, box-shadow 0.3s;
+}
+#password-gate .gate-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px var(--accent-glow); }
+#password-gate .gate-error { color: #ff5252; font-size: 0.85rem; height: 20px; }
+
+/* ── MAIN CONTENT ── */
+#main-content { display: block; }
+
+
+/* ── FLOATING NAV ── */
+.side-nav {
+  position: fixed; left: 24px; top: 50%; transform: translateY(-50%);
+  z-index: 100; display: flex; flex-direction: column; gap: 4px;
+}
+.side-nav a {
+  display: flex; align-items: center; gap: 12px;
+  text-decoration: none; color: var(--text-muted);
+  padding: 8px 12px; border-radius: 8px;
+  font-size: 0.75rem; font-weight: 500;
+  transition: all 0.3s; white-space: nowrap;
+}
+.side-nav a .nav-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--text-muted); transition: all 0.3s;
+  flex-shrink: 0;
+}
+.side-nav a .nav-label {
+  opacity: 0; transform: translateX(-8px);
+  transition: all 0.3s; pointer-events: none;
+}
+.side-nav:hover a .nav-label { opacity: 1; transform: translateX(0); }
+.side-nav a.active { color: var(--accent); }
+.side-nav a.active .nav-dot { background: var(--accent); box-shadow: 0 0 12px var(--accent-glow); transform: scale(1.4); }
+
+/* ── HERO ── */
+.hero {
+  min-height: auto; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center;
+  padding: 60px 24px; position: relative; overflow: hidden;
+}
+.hero::before {
+  content: ''; position: absolute; top: -40%; left: 50%; transform: translateX(-50%);
+  width: 800px; height: 800px; border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-dim) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--accent-dim); border: 1px solid var(--border-accent);
+  padding: 8px 20px; border-radius: 100px;
+  font-size: 0.8rem; font-weight: 600; color: var(--accent);
+  margin-bottom: 32px; letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.hero-badge .pulse {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+  animation: pulse 2s infinite;
+}
+@keyframes nudge {
+  0%,100% { transform:translateX(0); }
+  50% { transform:translateX(-6px); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.5); }
+}
+.hero h1 {
+  font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 900;
+  line-height: 1.1; letter-spacing: -2px;
+  margin-bottom: 20px; max-width: 900px;
+}
+.hero h1 .accent {
+  background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero .subtitle {
+  font-size: clamp(1rem, 2vw, 1.3rem); color: var(--text-secondary);
+  max-width: 650px; margin-bottom: 40px; font-weight: 300;
+}
+.hero .meta-row {
+  display: flex; gap: 32px; flex-wrap: wrap; justify-content: center;
+  font-size: 0.85rem; color: var(--text-muted);
+}
+.hero .meta-row span { display: flex; align-items: center; gap: 6px; }
+
+/* ── SECTIONS ── */
+.section {
+  padding: 80px 24px; max-width: 1100px; margin: 0 auto;
+  position: relative;
+}
+.section-label {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 0.75rem; font-weight: 700; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px;
+  padding-top: 8px;
+  border-top: 3px solid var(--accent);
+}
+.section-label .num {
+  background: var(--accent-dim); padding: 4px 10px;
+  border-radius: 6px; font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+}
+.section h2 {
+  font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;
+  line-height: 1.15; letter-spacing: -1px; margin-bottom: 24px;
+  position: relative;
+}
+.section-label .num::before {
+  content: attr(data-watermark);
+  position: absolute;
+  top: -20px; right: 0;
+  font-size: 8rem;
+  font-weight: 900;
+  color: rgba(255,255,255,0.12);
+  font-family: 'JetBrains Mono', monospace;
+  pointer-events: none;
+  line-height: 1;
+}
+.section .section-intro {
+  font-size: 1.15rem; color: var(--text-secondary); max-width: 750px;
+  margin-bottom: 48px; line-height: 1.8;
+}
+.divider {
+  height: 4px; background: rgba(255,255,255,0.12); max-width: 1100px;
+  margin: 0 auto; border-radius: 2px;
+}
+.back-to-toc {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 40px; padding: 10px 20px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text-muted);
+  text-decoration: none; font-size: 0.85rem; font-weight: 500;
+  transition: all 0.2s;
+}
+.back-to-toc:hover { color: var(--accent); border-color: var(--border-accent); }
+
+/* ── STAT CARDS ── */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 20px; margin-bottom: 56px;
+}
+.stat-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px 16px; text-align: center;
+  transition: all 0.3s;
+}
+.stat-card:hover { border-color: var(--border-accent); transform: translateY(-4px); background: var(--bg-card-hover); }
+.stat-card .stat-value {
+  font-size: 2.2rem; font-weight: 800; color: var(--accent);
+  font-family: 'JetBrains Mono', monospace; margin-bottom: 4px;
+}
+.stat-card .stat-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+
+/* ── INSIGHT BLOCKS ── */
+.insight-block {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 36px; margin-bottom: 24px;
+  transition: all 0.3s; position: relative; overflow: hidden;
+}
+.insight-block::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--gradient-1); border-radius: 3px;
+}
+.insight-block:hover { border-color: var(--border-accent); background: var(--bg-card-hover); }
+.insight-block h3 {
+  font-size: 1.3rem; font-weight: 700; margin-bottom: 12px; padding-left: 4px;
+}
+.insight-block p {
+  color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8; padding-left: 4px;
+}
+.insight-block .highlight {
+  color: var(--accent); font-weight: 600;
+}
+
+/* ── ROADMAP TIMELINE ── */
+.roadmap-timeline {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px; margin: 40px 0;
+}
+.roadmap-item {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px; text-align: center;
+  transition: all 0.3s; position: relative;
+}
+.roadmap-item.active { border-color: var(--accent); background: var(--accent-dim); }
+.roadmap-item .year {
+  font-family: 'JetBrains Mono', monospace; font-size: 1.6rem;
+  font-weight: 700; color: var(--accent); margin-bottom: 8px;
+}
+.roadmap-item .milestone { font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; }
+.roadmap-item .badge-tag {
+  display: inline-block; margin-top: 10px; font-size: 0.7rem;
+  background: var(--accent); color: #000; padding: 3px 10px;
+  border-radius: 100px; font-weight: 700; text-transform: uppercase;
+}
+
+/* ── QUOTE BLOCK ── */
+.quote-block {
+  background: var(--gradient-2); border: 1px solid var(--border-accent);
+  border-radius: 20px; padding: 48px; margin: 48px 0;
+  text-align: center; position: relative;
+}
+.quote-block .quote-mark {
+  font-size: 4rem; color: var(--accent); opacity: 0.3;
+  line-height: 1; margin-bottom: -16px;
+}
+.quote-block blockquote {
+  font-size: 1.4rem; font-weight: 500; font-style: italic;
+  line-height: 1.6; max-width: 700px; margin: 0 auto 16px;
+}
+.quote-block .quote-author { color: var(--text-muted); font-size: 0.9rem; }
+
+/* ── COMPARISON TABLE ── */
+.compare-table {
+  width: 100%; border-collapse: collapse; margin: 40px 0;
+}
+.compare-table th, .compare-table td {
+  padding: 16px 20px; text-align: left; border-bottom: 1px solid var(--border);
+}
+.compare-table th {
+  font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--text-muted); font-weight: 600;
+}
+.compare-table td { font-size: 0.95rem; }
+.compare-table tr:hover td { background: var(--bg-card); }
+.compare-table .metric-label { color: var(--text-secondary); }
+.compare-table .val-old { color: var(--text-muted); }
+.compare-table .val-new { color: var(--accent); font-weight: 600; }
+
+/* ── PLACEHOLDER SECTION ── */
+.placeholder-content {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; min-height: 250px; gap: 16px;
+  border: 1px dashed var(--border); border-radius: 20px;
+  background: var(--bg-secondary);
+}
+.placeholder-content .ph-icon { font-size: 2.5rem; opacity: 0.4; }
+.placeholder-content .ph-text {
+  color: var(--text-muted); font-size: 0.9rem; font-weight: 500;
+}
+.placeholder-content .ph-tag {
+  font-size: 0.7rem; background: var(--accent-dim); color: var(--accent);
+  padding: 4px 14px; border-radius: 100px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1px;
+}
+
+/* ── FOOTER ── */
+.footer {
+  text-align: center; padding: 60px 24px; color: var(--text-muted);
+  font-size: 0.8rem; border-top: 1px solid var(--border);
+  max-width: 1100px; margin: 0 auto;
+}
+.footer .footer-logo {
+  font-size: 1.2rem; font-weight: 700; margin-bottom: 8px;
+  background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* ── SCROLL ANIMATIONS ── */
+.fade-in {
+  opacity: 0; transform: translateY(30px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.fade-in.visible { opacity: 1; transform: translateY(0); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .side-nav { display: none; }
+  .section { padding: 70px 20px; }
+  .quote-block { padding: 32px 20px; }
+  .quote-block blockquote { font-size: 1.15rem; }
+  .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .roadmap-timeline { grid-template-columns: repeat(2, 1fr); }
+  .stat-card { padding: 20px 12px; }
+  .stat-card .stat-value { font-size: 1.6rem; }
+  .stat-card .stat-label { font-size: 0.75rem; }
+}
+@media (max-width: 600px) {
+  .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .stat-card { padding: 16px 8px; border-radius: 12px; }
+  .stat-card .stat-value { font-size: 1.3rem; }
+  .stat-card .stat-label { font-size: 0.7rem; }
+  .reg-grid-2col { grid-template-columns: 1fr !important; }
+  .roadmap-timeline { grid-template-columns: 1fr; }
+  .hero .meta-row { flex-direction: column; gap: 12px; }
+  .section h2 { font-size: 1.8rem; }
+  .section .section-intro { font-size: 1rem; }
+  .insight-block { padding: 24px 16px; }
+  .insight-block h3 { font-size: 1.1rem; }
+  [style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
+  .audience-row { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 400px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 901px) {
+  .scroll-hint-mobile { display: none !important; }
+}
+
+/* ── MOBILE NAV ── */
+.mobile-nav {
+  display: none; position: fixed; bottom: 0; left: 0; right: 0;
+  z-index: 100; background: rgba(10, 10, 15, 0.95);
+  backdrop-filter: blur(20px); border-top: 1px solid var(--border);
+  padding: 8px 12px; overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.mobile-nav-inner {
+  display: flex; gap: 4px; min-width: max-content;
+}
+.mobile-nav a {
+  color: var(--text-muted); text-decoration: none;
+  font-size: 0.65rem; font-weight: 600; padding: 8px 12px;
+  border-radius: 8px; white-space: nowrap; transition: all 0.2s;
+}
+.mobile-nav a.active { color: var(--accent); background: var(--accent-dim); }
+@media (max-width: 900px) { .mobile-nav { display: block; } }
+</style>
+</head>
+<body>
+
+<!-- PASSWORD GATE -->
+<div id="password-gate" style="display:none">
+  <div class="gate-logo">eToro Banking</div>
+  <div class="gate-sub">Strategy Deck — Confidential</div>
+  <input type="password" id="pw-input" placeholder="Enter password" autocomplete="off" autofocus>
+  <button class="gate-btn" onclick="checkPw()">Access</button>
+  <div class="gate-error" id="pw-error"></div>
+</div>
+
+<!-- TOP NAV -->
+<nav class="top-nav" id="top-nav">
+  <a href="#hero" style="text-decoration:none;"><div class="top-nav-brand">SuperApp — The Banking Pillar</div></a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div id="main-content">
+
+  <!-- SIDE NAV -->
+  <nav class="side-nav" id="side-nav">
+    <a href="#hero"><span class="nav-dot"></span><span class="nav-label">Top</span></a>
+    <a href="#s2"><span class="nav-dot"></span><span class="nav-label">Contents</span></a>
+    <a href="#s1"><span class="nav-dot"></span><span class="nav-label">Vision</span></a>
+    <a href="#s3"><span class="nav-dot"></span><span class="nav-label">Where We Are</span></a>
+    <a href="#s4"><span class="nav-dot"></span><span class="nav-label">The Gap</span></a>
+    <a href="#s6"><span class="nav-dot"></span><span class="nav-label">Roadmap</span></a>
+    <a href="#s7"><span class="nav-dot"></span><span class="nav-label">Launch</span></a>
+    <a href="#s8"><span class="nav-dot"></span><span class="nav-label">Partnerships</span></a>
+    <a href="#s10"><span class="nav-dot"></span><span class="nav-label">Regulatory</span></a>
+  </nav>
+
+  <!-- MOBILE NAV -->
+  <div class="mobile-nav">
+    <div class="mobile-nav-inner">
+      <a href="#s2">Contents</a>
+      <a href="#s1">Vision</a>
+      <a href="#s3">Today</a>
+      <a href="#s4">Gap</a>
+      <a href="#s6">Roadmap</a>
+      <a href="#s7">Launch</a>
+      <a href="#s8">Partnerships</a>
+      <a href="#s10">Regulatory</a>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="hero-badge"><span class="pulse"></span> SuperApp — The Banking Pillar</div>
+    <h1><span class="accent">Banking:</span> The Pillar That Makes eToro a <span class="accent">Daily App</span></h1>
+    <p class="subtitle">Banking transforms eToro from a weekly trading platform into the financial SuperApp — one place that runs your entire financial life. Built on the same App Store, AI, and open API model as eToro Trading.</p>
+    <div class="meta-row">
+      <span>📄 Strategy Deck v1.1</span>
+      <span>🔒 Confidential — CEO Eyes</span>
+      <span>📅 March 2026</span>
+    </div>
+
+
+    <div class="divider"></div>
+    <p style="font-size:0.92rem;color:var(--text-secondary);line-height:1.7;max-width:800px;margin:24px auto 0;">This document lays out the full 2026–2028 strategy, competitive analysis, product roadmap, team structure, partnership decisions, and go-to-market approach for transforming eToro Money into a banking SuperApp — with the App Store, AI agents, and eToro's open API as both the delivery engine and the client-facing platform — fully aligned with eToro Trading's approach.</p>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- EXECUTIVE SUMMARY -->
+  <section class="section" id="exec-summary">
+    <div class="fade-in">
+      <div class="section-label"><span class="num" data-watermark="00">00</span>EXECUTIVE SUMMARY</div>
+      <h2>The Opportunity</h2>
+
+      <p style="font-size:1.05rem;line-height:1.9;margin-bottom:24px;">eToro has 40 million users who trust us with their money — and then open another app to pay rent, split dinner, or check their balance. That second app is the opportunity.</p>
+
+      <p style="font-size:1.05rem;line-height:1.9;margin-bottom:24px;">Banking isn't a side feature. It's the foundation that turns eToro from a weekly investing app into a daily financial app. Revolut, Robinhood, and N26 are all racing toward the same thesis: win the whole financial life. We have something they don't — a social investing platform, copy trading, and a community that's hard to replicate. They're adding investing to banking. We're adding banking to investing. Different product, different moat.</p>
+
+      <p style="font-size:1.05rem;line-height:1.9;margin-bottom:24px;">And we're building it on the same platform rails as Trading — the App Store and eToro's open API. Clients and developers won't just use banking features. They'll build new ones — automated savings rules, spending bots, custom allocation agents — using AI and our API. The same ecosystem model, applied to banking.</p>
+
+      <p style="font-size:1.05rem;line-height:1.9;margin-bottom:20px;">And we're not starting from zero:</p>
+
+      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.95rem;background:var(--accent-dim);color:var(--accent);padding:8px 18px;border-radius:8px;font-weight:700;">1M <span style="color:var(--text-secondary);font-weight:400;font-size:0.85rem;">active users</span></span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.95rem;background:var(--accent-dim);color:var(--accent);padding:8px 18px;border-radius:8px;font-weight:700;">$3B <span style="color:var(--text-secondary);font-weight:400;font-size:0.85rem;">deposits</span></span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.95rem;background:var(--accent-dim);color:var(--accent);padding:8px 18px;border-radius:8px;font-weight:700;">130K <span style="color:var(--text-secondary);font-weight:400;font-size:0.85rem;">cards</span></span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.95rem;background:var(--accent-dim);color:var(--accent);padding:8px 18px;border-radius:8px;font-weight:700;">2 <span style="color:var(--text-secondary);font-weight:400;font-size:0.85rem;">EMI licences</span></span>
+      </div>
+
+      <p style="font-size:1.05rem;line-height:1.9;margin-bottom:32px;">The rails are live. What's missing is the full experience.</p>
+    </div>
+
+    <!-- VISION — with video -->
+    <div class="fade-in">
+      <p style="font-size:1.1rem;line-height:1.9;margin-bottom:24px;"><strong>The vision:</strong> one app where you earn, save, spend, and invest — and they're all connected. Salary arrives, Smart Sweep allocates it. Buy coffee, Stock-Back puts £0.14 into Apple shares. Copy a top investor, funded from your savings buffer. No switching apps. One financial loop.</p>
+
+      <div style="margin-bottom:32px;border-radius:12px;overflow:hidden;position:relative;cursor:pointer;" onclick="(function(el){var v=el.querySelector('video');if(v.requestFullscreen)v.requestFullscreen();else if(v.webkitEnterFullscreen)v.webkitEnterFullscreen();})(this)">
+        <video id="exec-hero-video" autoplay muted loop playsinline style="width:100%;display:block;border-radius:12px;">
+          <source src="campaigns/one-day-etoro.mp4?v=2" type="video/mp4">
+        </video>
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:80px;height:80px;background:rgba(0,0,0,0.6);border-radius:50%;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0.85;backdrop-filter:blur(4px);">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7L8 5z" fill="white"/></svg>
+        </div>
+      </div>
+      <script>
+      (function(){
+        var v=document.getElementById('exec-hero-video');
+        document.addEventListener('fullscreenchange',function(){
+          if(document.fullscreenElement===v){v.muted=false;v.currentTime=0;v.play();}
+          else{v.muted=true;}
+        });
+      })();
+      </script>
+    </div>
+
+    <!-- VISUALS — campaign images -->
+    <div class="fade-in">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;">
+        <div style="border-radius:12px;overflow:hidden;border:1px solid var(--border);">
+          <img src="campaigns/campaign3-stock-back.png" alt="Every Coffee Builds Your Portfolio — Stock-Back Card" style="width:100%;display:block;">
+        </div>
+        <div style="border-radius:12px;overflow:hidden;border:1px solid var(--border);">
+          <img src="campaigns/campaign4-ncw-card.png" alt="Your Wallet. Your Keys. Your Card — NCW Debit Card" style="width:100%;display:block;">
+        </div>
+      </div>
+
+      <p style="font-size:1.05rem;line-height:1.9;margin-bottom:32px;">If we get this right, banking becomes the <strong>#1 acquisition channel</strong>, user frequency shifts from <strong>~1×/week to 1–3×/day</strong>, cards activate <strong>across all geos</strong>, we unlock meaningful <strong>revenue diversification</strong>, and eToro becomes the financial app for the <strong>whole family</strong>.</p>
+    </div>
+
+    <!-- PLAN — three tracks -->
+    <div class="fade-in">
+      <p style="font-size:1.05rem;line-height:1.9;margin-bottom:20px;"><strong>The plan — three tracks in parallel:</strong></p>
+
+      <div style="display:flex;gap:16px;margin-bottom:28px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;border-left:3px solid var(--accent);padding:12px 16px;">
+          <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Close the Gap</div>
+          <div style="color:var(--text-secondary);font-size:0.88rem;line-height:1.6;">Virtual cards, Apple Pay, direct debits, multi-currency. Table stakes, shipped fast.</div>
+        </div>
+        <div style="flex:1;min-width:200px;border-left:3px solid #7c4dff;padding:12px 16px;">
+          <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Only eToro</div>
+          <div style="color:var(--text-secondary);font-size:0.88rem;line-height:1.6;">Goal Investor, NCW Debit Card, Smart Sweep, AI Auto-Allocation. Features that leverage eToro's unique assets.</div>
+        </div>
+        <div style="flex:1;min-width:200px;border-left:3px solid #ff6d00;padding:12px 16px;">
+          <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Expand</div>
+          <div style="color:var(--text-secondary);font-size:0.88rem;line-height:1.6;">Joint accounts, international transfers, credit, insurance. The moat.</div>
+        </div>
+      </div>
+
+      <p style="font-size:1.05rem;line-height:1.9;margin-bottom:16px;"><strong>The accelerator:</strong> most of these features won't be built the traditional way — and this is where banking fully aligns with eToro's company-wide strategy. The <strong>App Store</strong> is the primary vehicle: new banking capabilities are built as standalone apps and integrated into the SuperApp. But the App Store isn't just our delivery mechanism. It's a platform that clients, developers, and partners use to build banking apps themselves — automated savings tools, spending analytics, payment automations — using eToro's open API and AI agents. This is the same model eToro Trading is adopting: open the API, let AI-powered agents build on top of it, let the ecosystem scale what no single team could. The Banking Apps Squad ships the first wave. The ecosystem builds the rest. To drive this, eToro Money will stand up a dedicated <strong>Banking Apps Squad</strong> — a senior technical lead (architecture, eToro API integration, security), a junior developer, a product owner (design, user flows, feature specs), and a business owner (commercial logic, compliance, stakeholder coordination) — focused solely on shipping banking apps to the Store.</p>
+
+      <p style="font-size:1.05rem;line-height:1.9;margin-bottom:16px;">Combined with <strong>AI-assisted development across the stack</strong> — from code generation to testing to compliance review — we're targeting <strong>10× delivery velocity from H2 2026</strong>. This is already how eToro Trading builds. Banking will use the same tools, the same AI agents, and the same development workflow.</p>
+
+      <p style="font-size:1.05rem;line-height:1.9;margin-bottom:24px;">We're also exploring a <strong>fintech acquisition</strong> to accelerate time to market. Two partner decisions — <strong>Tribe</strong> and <strong>banking infrastructure</strong> — need resolution in Q2 and are detailed in this document. Delivering on this plan will require a <strong>clear resource allocation decision</strong> — dedicated engineering capacity, a senior banking PM hire, and leadership commitment to treating banking as a top-priority program alongside the App Store and AI initiatives.</p>
+
+      <p style="font-size:1.1rem;line-height:1.9;"><strong>The foundation is built. This is the plan to get banking right.</strong></p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+
+  <!-- SECTION 2: WHAT'S IN THIS PLAN -->
+  <section class="section" id="s2">
+    <div class="fade-in">
+      <div class="section-label">Table of Contents</div>
+      <h2>What's in This Document</h2>
+      <p class="section-intro">Click any section to jump directly to it.</p>
+    </div>
+
+    <div class="fade-in" style="margin-top:32px;">
+      <div style="display:flex;flex-direction:column;gap:16px;max-width:800px;">
+
+        <a href="#s1" style="text-decoration:none;display:flex;gap:16px;align-items:center;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all 0.25s;cursor:pointer;" onmouseover="this.style.borderColor='rgba(0,200,83,0.25)';this.style.transform='translateX(4px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)';this.style.transform='none'">
+          <div style="flex-shrink:0;width:36px;height:36px;background:var(--accent-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">1</div>
+          <div>
+            <div style="color:var(--text-primary);font-weight:600;font-size:0.95rem;margin-bottom:4px;">Vision & Context</div>
+                      </div>
+        </a>
+
+        <a href="#s3" style="text-decoration:none;display:flex;gap:16px;align-items:center;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all 0.25s;cursor:pointer;" onmouseover="this.style.borderColor='rgba(0,200,83,0.25)';this.style.transform='translateX(4px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)';this.style.transform='none'">
+          <div style="flex-shrink:0;width:36px;height:36px;background:var(--accent-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">2</div>
+          <div>
+            <div style="color:var(--text-primary);font-weight:600;font-size:0.95rem;margin-bottom:4px;">Where We Are Today</div>
+                      </div>
+        </a>
+
+        <a href="#s4" style="text-decoration:none;display:flex;gap:16px;align-items:center;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all 0.25s;cursor:pointer;" onmouseover="this.style.borderColor='rgba(0,200,83,0.25)';this.style.transform='translateX(4px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)';this.style.transform='none'">
+          <div style="flex-shrink:0;width:36px;height:36px;background:var(--accent-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">3</div>
+          <div>
+            <div style="color:var(--text-primary);font-weight:600;font-size:0.95rem;margin-bottom:4px;">The Gap</div>
+                      </div>
+        </a>
+
+        <a href="#s6" style="text-decoration:none;display:flex;gap:16px;align-items:center;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all 0.25s;cursor:pointer;" onmouseover="this.style.borderColor='rgba(0,200,83,0.25)';this.style.transform='translateX(4px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)';this.style.transform='none'">
+          <div style="flex-shrink:0;width:36px;height:36px;background:var(--accent-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">4</div>
+          <div>
+            <div style="color:var(--text-primary);font-weight:600;font-size:0.95rem;margin-bottom:4px;">Product Roadmap &amp; Execution Based on AI/App Store</div>
+                      </div>
+        </a>
+
+        <a href="#s7" style="text-decoration:none;display:flex;gap:16px;align-items:center;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all 0.25s;cursor:pointer;" onmouseover="this.style.borderColor='rgba(0,200,83,0.25)';this.style.transform='translateX(4px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)';this.style.transform='none'">
+          <div style="flex-shrink:0;width:36px;height:36px;background:var(--accent-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">5</div>
+          <div>
+            <div style="color:var(--text-primary);font-weight:600;font-size:0.95rem;margin-bottom:4px;">How We Launch It</div>
+          </div>
+        </a>
+
+        <a href="#s8" style="text-decoration:none;display:flex;gap:16px;align-items:center;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all 0.25s;cursor:pointer;" onmouseover="this.style.borderColor='rgba(0,200,83,0.25)';this.style.transform='translateX(4px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)';this.style.transform='none'">
+          <div style="flex-shrink:0;width:36px;height:36px;background:var(--accent-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">6</div>
+          <div>
+            <div style="color:var(--text-primary);font-weight:600;font-size:0.95rem;margin-bottom:4px;">Strategic Partnerships</div>
+          </div>
+        </a>
+
+        <a href="#s10" style="text-decoration:none;display:flex;gap:16px;align-items:center;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all 0.25s;cursor:pointer;" onmouseover="this.style.borderColor='rgba(0,200,83,0.25)';this.style.transform='translateX(4px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)';this.style.transform='none'">
+          <div style="flex-shrink:0;width:36px;height:36px;background:var(--accent-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">7</div>
+          <div>
+            <div style="color:var(--text-primary);font-weight:600;font-size:0.95rem;margin-bottom:4px;">Regulatory Framework</div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 1: VISION & CONTEXT -->
+  <section class="section" id="s1">
+    <div class="fade-in">
+      <div class="section-label"><span class="num" data-watermark="01">1</span> Vision &amp; Context</div>
+      <h2>Why Banking Changes Everything</h2>
+      <p class="section-intro">
+        eToro is the world's leading social investment platform — <span style="color:var(--accent);font-weight:600">40M+ users</span>, 100+ countries, NASDAQ-listed at $5.6B. But there's a fundamental frequency problem. And banking is the fix.
+      </p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid fade-in">
+      <div class="stat-card">
+        <div class="stat-value">40M+</div>
+        <div class="stat-label">Registered Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">$5.6B</div>
+        <div class="stat-label">NASDAQ Valuation</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">100+</div>
+        <div class="stat-label">Countries</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">~1×/wk</div>
+        <div class="stat-label">Current App Frequency</div>
+      </div>
+    </div>
+
+    <!-- Frequency Problem -->
+    <div class="insight-block fade-in">
+      <h3>The Frequency Problem</h3>
+      <p>
+        eToro users check the app <span class="highlight">once a week</span> — they glance at positions, maybe place a trade. But neo-bank users open their app <span class="highlight">every single day</span>. They check their balance, make payments, track spending. Daily engagement is what separates a financial app from a trading app, and <span class="highlight">banking is the only pillar that delivers it</span>.
+      </p>
+    </div>
+
+    <!-- Strategic Rationale Cards -->
+    <div class="fade-in" style="margin-top:32px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;border-left:3px solid var(--accent);">
+          <div style="font-weight:700;font-size:0.95rem;margin-bottom:6px;">New Acquisition Funnel</div>
+          <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">Banking opens a new front door. Users who'd never open a brokerage account will open a free bank account — and then discover investing. Bank first, trade later. An entirely new funnel that didn't exist before.</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;border-left:3px solid var(--accent);">
+          <div style="font-weight:700;font-size:0.95rem;margin-bottom:6px;">LTV & Retention Step-Change</div>
+          <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">A portfolio is portable. A bank account with salary, direct debits, and 3 years of spending history isn't. Trading users leave when markets are boring. Banking users don't — they still need to pay rent and buy coffee. Banking makes eToro all-weather.</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;border-left:3px solid var(--accent);">
+          <div style="font-weight:700;font-size:0.95rem;margin-bottom:6px;">Family & Next Generation</div>
+          <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">Family accounts and kids cards bring the next generation into eToro from age 6. They grow up inside the platform — a 10-year head start on competitors for lifetime value.</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;border-left:3px solid var(--accent);">
+          <div style="font-weight:700;font-size:0.95rem;margin-bottom:6px;">Brand Elevation</div>
+          <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">A company that holds your salary, pays your bills, and manages your investments is a financial institution — not "just a trading app." Banking elevates eToro's brand to Revolut/JPM territory.</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;border-left:3px solid var(--accent);">
+          <div style="font-weight:700;font-size:0.95rem;margin-bottom:6px;">Investor & Analyst Narrative</div>
+          <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">Banking changes how the market sees eToro — from a trading platform to a diversified financial services company. Multiple revenue streams, daily engagement metrics, and all-weather retention. That's a stronger public market narrative.</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;border-left:3px solid #7c4dff;">
+          <div style="font-weight:700;font-size:0.95rem;margin-bottom:6px;">Accelerate via Acquisition</div>
+          <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">Acquiring a small, mature banking/fintech company can dramatically shorten time to market — bringing both a proven product and experienced talent (acqui-hire). A search process is already underway and should be continued with urgency.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Competitive Urgency -->
+    <div class="fade-in" style="margin-top:48px;">
+      <h3 style="margin-bottom:16px;font-size:1.1rem;color:#ff5252;text-transform:uppercase;letter-spacing:1px;font-weight:600;">⏰ The Window Is Closing</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+        <div style="background:var(--bg-card);border:1px solid rgba(255,82,82,0.2);border-radius:12px;padding:20px;">
+          <div style="font-weight:700;font-size:0.95rem;margin-bottom:6px;">Revolut</div>
+          <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">65M users. Adding <span style="color:#ff5252;font-weight:600;">2M users/month</span>. UK banking licence secured Aug 2024. £30B in deposits. Now launching trading, crypto, and mortgages. They're coming for our territory.</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid rgba(255,82,82,0.2);border-radius:12px;padding:20px;">
+          <div style="font-weight:700;font-size:0.95rem;margin-bottom:6px;">Robinhood</div>
+          <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">Just launched banking at their "Take Flight" event. Gold Card, 4% APY, stock gifting, wealth management. <span style="color:#ff5252;font-weight:600;">They went from broker to bank in one announcement.</span> US-only, but the playbook is set.</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid rgba(255,82,82,0.2);border-radius:12px;padding:20px;">
+          <div style="font-weight:700;font-size:0.95rem;margin-bottom:6px;">Trade Republic</div>
+          <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">4M+ users across Europe. Paying <span style="color:#ff5252;font-weight:600;">3% interest on cash</span> from day one. Full banking licence. Card with savings round-ups. They're the fastest-growing broker-bank in EU — our backyard.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom CTA -->
+    <div class="quote-block fade-in" style="background:var(--bg-card);border-color:var(--border);">
+      <blockquote style="font-size:1.6rem;font-style:normal;font-weight:800;letter-spacing:-0.5px;">
+        The question isn't <span style="color:var(--text-muted);text-decoration:line-through;">IF</span> eToro adds banking.<br>
+        It's <span style="color:var(--accent);">HOW FAST.</span>
+      </blockquote>
+    </div>
+
+    <!-- High-Level Targets -->
+    <div class="fade-in" style="margin-top:48px;">
+      <h3 style="margin-bottom:16px;font-size:1.1rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;">What Success Looks Like</h3>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;gap:14px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:28px;height:28px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">1</div>
+          <div>
+            <div style="font-weight:700;font-size:0.9rem;margin-bottom:2px;">Daily App Opens</div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;">Shift from ~1×/week to 1-3×/day for banking users. Banking makes eToro a daily habit, not a weekly check-in.</div>
+          </div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;gap:14px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:28px;height:28px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">2</div>
+          <div>
+            <div style="font-weight:700;font-size:0.9rem;margin-bottom:2px;">Banking as the #1 Acquisition Channel</div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;">New users coming in through banking — free account + card — who then discover investing. Bank first, trade later.</div>
+          </div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;gap:14px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:28px;height:28px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">3</div>
+          <div>
+            <div style="font-weight:700;font-size:0.9rem;margin-bottom:2px;">Card Activation Across All Geos</div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;">Every eToro user in UK, EU, and global USD markets has access to a card. From regional product to worldwide availability.</div>
+          </div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;gap:14px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:28px;height:28px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">4</div>
+          <div>
+            <div style="font-weight:700;font-size:0.9rem;margin-bottom:2px;">Revenue Diversification</div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;">Banking revenue — interchange, FX, float — becomes a meaningful new line alongside trading commissions. All-weather income.</div>
+          </div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;gap:14px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:28px;height:28px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">5</div>
+          <div>
+            <div style="font-weight:700;font-size:0.9rem;margin-bottom:2px;">Family Penetration</div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;">Bring the next generation into eToro through family accounts and kids cards. A 10-year head start on lifetime value.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <a href="#s2" class="back-to-toc">↑ Back to Table of Contents</a>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 3: WHERE WE ARE TODAY -->
+  <section class="section" id="s3">
+    <div class="fade-in">
+      <div class="section-label"><span class="num" data-watermark="02">2</span> Where We Are Today</div>
+      <h2>Current Banking Capabilities</h2>
+      <p class="section-intro">eToro Money isn't starting from zero. Two EMI-licensed entities, live accounts, cards, and a growing partner stack. Here's exactly what we have.</p>
+    </div>
+
+    <!-- Current Traction -->
+    <div class="fade-in" style="margin-top:32px;">
+      <h3 style="margin-bottom:16px;font-size:1.1rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;">Current Traction</h3>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:32px;">
+        <div style="background:var(--bg-card);border:1px solid var(--border-accent);border-radius:12px;padding:20px;flex:1;min-width:140px;text-align:center;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1.6rem;font-weight:800;color:var(--accent);">130K</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px;">Cards Issued</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border-accent);border-radius:12px;padding:20px;flex:1;min-width:140px;text-align:center;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1.6rem;font-weight:800;color:var(--accent);">1M</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px;">Active Banking Users</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border-accent);border-radius:12px;padding:20px;flex:1;min-width:140px;text-align:center;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1.6rem;font-weight:800;color:var(--accent);">$3B</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px;">Annual Deposits</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border-accent);border-radius:12px;padding:20px;flex:1;min-width:140px;text-align:center;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1.45rem;font-weight:800;color:var(--accent);">1.02M / 0.39M</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px;">Annual Card Transactions <span style="opacity:0.7;">(2025 / 2026 YTD)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- What's Live Today -->
+    <div class="fade-in" style="margin-top:0;">
+      <h3 style="margin-bottom:16px;font-size:1.1rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;">What's Live Today</h3>
+
+      <!-- Two Entities -->
+      <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px 20px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:1.2rem;">🇬🇧</span>
+          <div><span style="font-weight:700;">eToro Money UK Ltd</span> <span style="color:var(--text-muted);font-size:0.85rem;">— EMI, FCA, GBP, ClearBank</span></div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px 20px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:1.2rem;">🇪🇺</span>
+          <div><span style="font-weight:700;">eToro Money Malta Ltd</span> <span style="color:var(--text-muted);font-size:0.85rem;">— EMI, MFSA, EUR, Banking Circle + OpenPayd</span></div>
+        </div>
+      </div>
+
+      <!-- Consolidated Features -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+
+        <div style="background:var(--bg-card);border:1px solid var(--border-accent);border-radius:12px;padding:24px;">
+          <div style="font-weight:700;font-size:1rem;margin-bottom:12px;color:var(--accent);">💰 Accounts</div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:0.88rem;color:var(--text-secondary);">
+            <div>✅ GBP + EUR + AUD IBAN accounts</div>
+            <div>✅ Salary deposit (3rd party payments)</div>
+            <div>✅ SEPA + Faster Payments</div>
+            <div>✅ Open Banking top-up (Volt UK, Tink EU)</div>
+            <div>✅ Internal transfers</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border-accent);border-radius:12px;padding:24px;">
+          <div style="font-weight:700;font-size:1rem;margin-bottom:12px;color:var(--accent);">💳 Card</div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:0.88rem;color:var(--text-secondary);">
+            <div>✅ Visa Debit — physical only (TAG)</div>
+            <div>✅ Dual program — Black & Green</div>
+            <div>✅ UK + EU markets</div>
+            <div>✅ Google Pay</div>
+            <div>✅ ATM, online + in-store payments</div>
+
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border-accent);border-radius:12px;padding:24px;">
+          <div style="font-weight:700;font-size:1rem;margin-bottom:12px;color:var(--accent);">🎁 Perks</div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:0.88rem;color:var(--text-secondary);">
+            <div>✅ 4% stock-back rewards</div>
+            <div>✅ Visa Platinum benefits program</div>
+            <div>✅ Luxury Hotels, AirRefund, Sixt, lounges</div>
+            <div>✅ Unique investing ↔ banking bridge</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="margin-top:12px;font-size:0.82rem;color:var(--text-muted);font-style:italic;">
+        Both entities offer the same product. Investment services run through separate eToro entities (not EMI) — money already flows between them today for deposits and withdrawals.
+      </div>
+    </div>
+
+    <!-- Partner Stack -->
+    <div class="fade-in" style="margin-top:48px;">
+      <h3 style="margin-bottom:16px;font-size:1.1rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;">Partner Stack</h3>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Partner</th>
+            <th>Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="metric-label">Card Processor + Ledger</td>
+            <td class="val-new">Tribe</td>
+            <td style="color:var(--text-secondary);font-size:0.88rem;">Core processing, auth, ledger ⚠️</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Card Scheme</td>
+            <td class="val-new">Visa</td>
+            <td style="color:var(--text-secondary);font-size:0.88rem;">Settlement network</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Card Production</td>
+            <td class="val-new">TAG</td>
+            <td style="color:var(--text-secondary);font-size:0.88rem;">Physical card manufacturing</td>
+          </tr>
+          <tr>
+            <td class="metric-label">UK IBANs</td>
+            <td class="val-new">ClearBank</td>
+            <td style="color:var(--text-secondary);font-size:0.88rem;">GBP safeguarding + IBAN infra</td>
+          </tr>
+          <tr>
+            <td class="metric-label">EU IBANs</td>
+            <td class="val-new">Banking Circle + OpenPayd</td>
+            <td style="color:var(--text-secondary);font-size:0.88rem;">EUR safeguarding + SWIFT</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Open Banking</td>
+            <td class="val-new">Volt (UK) + Tink (EU)</td>
+            <td style="color:var(--text-secondary);font-size:0.88rem;">A2A payment initiation + aggregation</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top:16px;background:rgba(255,82,82,0.08);border:1px solid rgba(255,82,82,0.2);border-radius:10px;padding:16px;font-size:0.88rem;">
+        <div style="font-weight:700;color:#ff5252;margin-bottom:4px;">⚠️ Tribe Dependency Risk</div>
+        <div style="color:var(--text-secondary);">Tribe controls the ledger, which means Tribe controls the pace. Delivery has been slow. This is the single biggest infrastructure risk — addressed in the Partnerships section.</div>
+      </div>
+    </div>
+
+    <!-- EMI Scope Summary -->
+    <div class="fade-in" style="margin-top:48px;">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;">
+        <div style="font-weight:700;font-size:0.95rem;margin-bottom:8px;">EMI Licence — Quick Summary</div>
+        <div style="color:var(--text-secondary);font-size:0.88rem;line-height:1.6;">
+          Both entities hold Electronic Money Institution licences — covering payment accounts, IBANs, cards, transfers, FX, and direct debits. Features outside EMI scope (interest, lending, insurance) route through the investment entity or partners. <span style="color:var(--accent);">80% of this plan is buildable under our current licences.</span> Full regulatory mapping in <a href="#s10" style="color:var(--accent);text-decoration:underline;">Section 7</a>.
+        </div>
+      </div>
+    </div>
+
+
+    <a href="#s2" class="back-to-toc">↑ Back to Table of Contents</a>
+  </section>
+  
+  <div class="divider"></div>
+
+<!-- SECTION 4: COMPETITIVE LANDSCAPE -->
+  <section class="section" id="s4">
+    <div class="fade-in">
+      <div class="section-label"><span class="num" data-watermark="03">3</span> The Gap</div>
+      <h2>What We Have vs. What They Have</h2>
+      <p class="section-intro">The key banking features that leading platforms already offer — and where eToro stands today.</p>
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="fade-in" style="margin-top:24px;">
+      <div class="scroll-hint-mobile" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 14px;background:rgba(0,200,83,0.08);border:1px solid rgba(0,200,83,0.15);border-radius:8px;font-size:0.85rem;color:var(--text-secondary);">
+        <span style="font-size:1.1rem;">👉</span> <strong style="color:var(--accent);">Scroll right</strong> to see all 5 platforms
+      </div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;">
+      <table class="compare-table" style="min-width:700px;">
+        <thead>
+          <tr>
+            <th style="text-align:left;min-width:220px;">Feature</th>
+            <th style="text-align:center;color:var(--text-primary);font-weight:700;">Revolut</th>
+            <th style="text-align:center;color:var(--text-primary);font-weight:700;">N26</th>
+                        <th style="text-align:center;color:var(--text-primary);font-weight:700;">Wise</th>
+            <th style="text-align:center;color:var(--text-primary);font-weight:700;">Robinhood</th>
+            <th style="text-align:center;color:var(--accent);font-weight:700;">eToro</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="6" style="padding:12px 0 4px;font-size:0.75rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;border:none;">What eToro Already Has</td></tr>
+          <tr>
+            <td class="metric-label">USD Balance & Local Currency (IBAN)</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:var(--accent);font-weight:700;">✅</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Debit Card (Physical)</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);font-weight:700;">✅</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Open Banking Deposits</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:var(--accent);font-weight:700;">✅</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Stock-Back Rewards</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:var(--accent);">✅ 3%</td>
+            <td style="text-align:center;color:var(--accent);font-weight:700;">✅ 4%</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Social / Copy Trading</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:var(--accent);font-weight:700;">✅</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Crypto (Native / NCW)</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);font-weight:700;">✅</td>
+          </tr>
+          <tr><td colspan="6" style="padding:20px 0 4px;font-size:0.75rem;font-weight:700;color:#ff5252;text-transform:uppercase;letter-spacing:1px;border:none;">What eToro Doesn't Have Yet</td></tr>
+          <tr>
+            <td class="metric-label">Virtual Card + Apple Pay</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:#ff5252;font-weight:700;">❌</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Multi-Currency Balances</td>
+            <td style="text-align:center;color:var(--accent);">✅ 36+</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:var(--accent);">✅ 40+</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:#ff5252;font-weight:700;">❌</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Multi-Currency Card Spend</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:#ff5252;font-weight:700;">❌</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Spending Analytics & Notifications</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:#ff5252;font-weight:700;">❌</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Savings Pockets / Vaults</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:#ff5252;font-weight:700;">❌</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Interest on Cash</td>
+            <td style="text-align:center;color:var(--accent);">✅ 3-4%</td>
+            <td style="text-align:center;color:var(--accent);">✅ 2.3%</td>
+            <td style="text-align:center;color:var(--accent);">✅ 3.8%</td>
+            <td style="text-align:center;color:var(--accent);">✅ 4%</td>
+            <td style="text-align:center;color:#ff5252;font-weight:700;">❌</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Round-Up Investing</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:#ff5252;font-weight:700;">❌</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Family Accounts / Kids Cards</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:#ff5252;font-weight:700;">❌</td>
+          </tr>
+          <tr>
+            <td class="metric-label">International Transfers</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅ Core</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:#ff5252;font-weight:700;">❌</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Direct Debits (Outbound)</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:var(--accent);font-weight:700;">🇬🇧 only</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Credit Card / Lending</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:#ff5252;">❌</td>
+            <td style="text-align:center;color:var(--accent);">✅</td>
+            <td style="text-align:center;color:#ff5252;font-weight:700;">❌</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+
+      <div style="background:var(--bg-card);border:1px solid var(--border-accent);border-radius:12px;padding:20px;margin-top:8px;">
+        <div style="font-size:1rem;line-height:1.7;color:var(--text-secondary);">
+          <strong style="color:var(--text-primary);">The scorecard:</strong> Revolut has <span style="color:var(--accent);font-weight:700;">17 of 20</span> features. N26 has <span style="color:var(--accent);font-weight:700;">13</span>. Wise has <span style="color:var(--accent);font-weight:700;">13</span>. Robinhood has <span style="color:var(--accent);font-weight:700;">11</span>. eToro has <span style="color:#ff5252;font-weight:700;">7</span>. The gap is real — but with 6 features already in development and our unique investing + social + crypto moat, it's closable.
+        </div>
+      </div>
+    </div>
+
+
+
+
+    <a href="#s2" class="back-to-toc">↑ Back to Table of Contents</a>
+  </section>
+  
+  <div class="divider"></div>
+
+<!-- SECTION 6: PRODUCT ROADMAP -->
+  <section class="section" id="s6">
+    <div class="fade-in">
+      <div class="section-label"><span class="num" data-watermark="04">4</span> Product Roadmap &amp; Execution Based on AI/App Store</div>
+      <h2>25 Features, 3 Tracks</h2>
+      <p class="section-intro">Three parallel tracks across five phases. Track 1 closes the gap with competitors. Track 2 builds what only eToro can. Track 3 is the next wave. Timelines will be set once resources are committed.</p>
+    </div>
+
+    <!-- Strategic Approach -->
+    <div class="fade-in" style="margin-top:32px;">
+      <div style="background:var(--bg-card);border:1px solid var(--border-accent);border-radius:12px;padding:28px;">
+        <div style="font-size:1.15rem;font-weight:800;margin-bottom:16px;">Our Approach: <span style="color:var(--accent);">Two Directions at Once</span></div>
+        <div style="color:var(--text-secondary);font-size:0.9rem;line-height:1.8;">
+          <p style="margin:0 0 12px 0;">This roadmap works on two levels simultaneously:</p>
+          <p style="margin:0 0 12px 0;"><span style="color:var(--text-primary);font-weight:600;">1. Close the gap.</span> Virtual cards, multi-currency, spending tools, Apple Pay — the table stakes that Revolut, N26, and Wise already have. Without these, we don't have permission to compete. Track 1 is about earning the right to be in the conversation.</p>
+          <p style="margin:0 0 12px 0;"><span style="color:var(--text-primary);font-weight:600;">2. Leverage our leadership in trading and crypto.</span> Round-up investing, Smart Sweep, NCW Debit Card, stock gifting, AI auto-allocation — features that <em>only eToro can build</em> because we already have the trading engine, the social network, and the crypto infrastructure. No neo-bank has this. They're trying to bolt on trading. We're building banking on top of trading.</p>
+          <p style="margin:0 0 20px 0;color:var(--text-primary);font-weight:600;">The competitors are going from banking → trading. We're going from trading → banking. That's a fundamentally different starting position — and a faster path to the SuperApp.</p>
+          <div style="border-top:1px solid var(--border);padding-top:20px;">
+            <p style="margin:0 0 12px 0;"><span style="color:var(--text-primary);font-weight:600;">How we deliver:</span> eToro's upcoming <strong>App Store</strong> is the primary vehicle for launching new capabilities. Each feature follows a two-step model: <em>build as an app → integrate into the SuperApp</em>. Combined with AI-assisted development, we are counting on <strong>10× delivery velocity from H2 2026 and beyond</strong> to meet the ambitious scope of this roadmap.</p>
+            <p style="margin:0 0 12px 0;">For the App Store to work for banking, eToro Money must build a robust <strong>Money API</strong> — exposing account balances, transaction data, card controls, and payment triggers with the same quality and documentation as eToro Trading's API. This is what lets external developers and AI agents build banking apps. Without it, the App Store is closed to banking. This API is a prerequisite, not a phase-two item.</p>
+            <p style="margin:0 0 8px 0;">The roadmap naturally splits into two layers:</p>
+            <p style="margin:0 0 6px 0;"><span style="background:rgba(255,82,82,0.15);color:#ff5252;font-weight:700;font-size:0.75rem;padding:3px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;">INFRA</span> <span style="color:var(--text-secondary);font-size:0.85rem;">Platform rails built by eToro core — card issuance, IBAN, multi-currency ledger, Direct Debit, Apple Pay. These require deep integration and can't be decoupled into standalone apps.</span></p>
+            <p style="margin:0;"><span style="background:rgba(0,200,83,0.15);color:var(--accent);font-weight:700;font-size:0.75rem;padding:3px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;">APP</span> <span style="color:var(--text-secondary);font-size:0.85rem;">Features built for the App Store — savings pockets, round-ups, budgeting, gifting, P2P. These plug into the infrastructure layer and ship as independent apps first.</span></p>
+            <div style="border-top:1px solid var(--border);margin-top:20px;padding-top:20px;">
+              <p style="margin:0;color:var(--text-secondary);font-size:0.9rem;line-height:1.8;"><span style="color:var(--text-primary);font-weight:600;">The Team:</span> eToro Money will stand up a dedicated <strong style="color:var(--text-primary);">Banking Apps Squad</strong> — a small, fast-moving unit designed to ship App Store features at startup speed. The squad: one <strong>senior technical lead</strong> (full-stack, owns architecture, eToro API integration, and security), one <strong>junior developer</strong> (builds alongside, ramps fast), a <strong>product owner</strong> (owns design, user flows, and feature specs), and a <strong>business owner</strong> (owns commercial logic, compliance alignment, and stakeholder coordination). This squad's sole mission: take features from this roadmap, build them as apps, and get them live in the App Store.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRACK 1 -->
+    <div class="fade-in" style="margin-top:32px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <div style="background:var(--accent);color:var(--bg-primary);font-weight:800;font-size:0.8rem;padding:6px 14px;border-radius:8px;font-family:'JetBrains Mono',monospace;">TRACK 1</div>
+        <div style="font-weight:700;font-size:1.2rem;">Close the Gap</div>
+        <div style="color:var(--text-muted);font-size:0.85rem;">— Permission to play. What every neo-bank already has.</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;">
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">1</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Virtual Card + Apple Pay <span style="color:var(--accent);font-weight:600;font-size:0.8rem;">(WIP)</span> <span style="background:rgba(255,82,82,0.15);color:#ff5252;font-weight:700;font-size:0.7rem;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;vertical-align:middle;">INFRA</span></div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">Every single competitor has this. It's the #1 reason users don't use the eToro card daily. Without mobile wallet support, the card is stuck in the physical world — no online checkout, no tap-to-pay. This is table stakes, and it's our biggest gap.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">2</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Card for Rest of World — USD-Based Global Card <span style="color:var(--accent);font-weight:600;font-size:0.8rem;">(WIP)</span> <span style="background:rgba(255,82,82,0.15);color:#ff5252;font-weight:700;font-size:0.7rem;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;vertical-align:middle;">INFRA</span></div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">A dollar-based card offered to club members worldwide, powered by Visa's cross-border network with existing licences and banking partners. Not a local market launch — a global program that gives millions of eToro users outside UK/EU instant access to a card without needing local issuing infrastructure.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">3</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Multi-Currency Balances <span style="color:var(--accent);font-weight:600;font-size:0.8rem;">(WIP)</span> <span style="background:rgba(255,82,82,0.15);color:#ff5252;font-weight:700;font-size:0.7rem;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;vertical-align:middle;">INFRA</span></div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">Revolut offers 36+ currencies. Wise offers 40+. eToro users trade in USD but live in GBP/EUR. Without multi-currency balances, every transaction involves an FX conversion — and users feel it. This is core to being a global financial app.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">4</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Card Connected to Multi-Currency Balances <span style="background:rgba(255,82,82,0.15);color:#ff5252;font-weight:700;font-size:0.7rem;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;vertical-align:middle;">INFRA</span></div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">Once you have multi-currency balances, the card must spend from them. Travel to Spain, spend EUR. Fly to the US, spend USD. No markup, no conversion surprise. Revolut and Wise built their brand on this — it's expected.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">5</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Card / Apple Pay Deposit to IBAN <span style="background:rgba(255,82,82,0.15);color:#ff5252;font-weight:700;font-size:0.7rem;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;vertical-align:middle;">INFRA</span></div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">Users want to top up their account instantly — tap a card or Apple Pay and money is there. Right now, IBAN funding via bank transfer is slow. Instant deposits eliminate friction and make the account feel like a real bank account.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">6</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Savings Pockets (with Interest) <span style="background:rgba(0,200,83,0.15);color:var(--accent);font-weight:700;font-size:0.7rem;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;vertical-align:middle;">APP</span></div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">Revolut Vaults, N26 Spaces, Wise Jars — every neo-bank lets you separate money into goals. Basic savings pockets with interest are table stakes. This is what gets us permission to play in the savings space.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">7</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Spending Analytics + Instant Notifications <span style="background:rgba(0,200,83,0.15);color:var(--accent);font-weight:700;font-size:0.7rem;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;vertical-align:middle;">APP</span></div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">This is the daily engagement engine. Instant push on every transaction, monthly spending breakdowns, category tagging. It's what makes a neo-bank feel alive. Without it, the app is silent between trades — and users forget to come back.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">8</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Direct Debit Outbound (EU) <span style="background:rgba(255,82,82,0.15);color:#ff5252;font-weight:700;font-size:0.7rem;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;vertical-align:middle;">INFRA</span></div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">UK already has this — it's live. But EU users can't pay bills via direct debit yet. If you want to be someone's primary bank, you need to pay their bills. Direct debits for rent, utilities, subscriptions — this is what locks users into the platform.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">9</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Geo Expansion — UAE + Singapore <span style="background:rgba(255,82,82,0.15);color:#ff5252;font-weight:700;font-size:0.7rem;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;vertical-align:middle;">INFRA</span></div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">High-growth, high-wealth markets where eToro already has active users but no banking product. UAE and Singapore are fintech-friendly regulatory environments with strong demand for multi-currency and investment-linked banking.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">10</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Interest on Cash <span style="background:rgba(0,200,83,0.15);color:var(--accent);font-weight:700;font-size:0.7rem;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;vertical-align:middle;">APP</span></div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">Revolut pays 3-4%. Robinhood pays 4%. Trade Republic pays 3%. Users now expect their idle cash to earn. eToro can route this through the investment entity or a partner bank — it doesn't require the EMI licence, but it requires a solution.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">11</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Family Balances & Cards <span style="background:rgba(0,200,83,0.15);color:var(--accent);font-weight:700;font-size:0.7rem;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;vertical-align:middle;">APP</span></div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">Family accounts and kids cards bring the next generation into eToro. Revolut and Robinhood both offer this. Parents manage sub-accounts, set spending limits, and introduce their children to saving and investing — all within one app.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TRACK 2 -->
+    <div class="fade-in" style="margin-top:56px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <div style="background:#7c4dff;color:white;font-weight:800;font-size:0.8rem;padding:6px 14px;border-radius:8px;font-family:'JetBrains Mono',monospace;">TRACK 2</div>
+        <div style="font-weight:700;font-size:1.2rem;">eToro Only</div>
+        <div style="color:var(--text-muted);font-size:0.85rem;">— Reason to choose. What nobody else can build.</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;">
+
+        <div style="background:var(--bg-card);border:1px solid rgba(124,77,255,0.2);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:rgba(124,77,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#7c4dff;font-family:'JetBrains Mono',monospace;">1</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Round-Up Investing <span style="background:rgba(0,200,83,0.15);color:var(--accent);font-weight:700;font-size:0.7rem;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;vertical-align:middle;">APP</span></div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">Buy coffee for £3.40, round up £0.60 into your portfolio. This is the ultimate investing↔banking bridge — it turns every card swipe into a micro-investment. Revolut has it, Robinhood has it. Only eToro can combine it with CopyTrader and SmartPortfolios.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid rgba(124,77,255,0.2);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:rgba(124,77,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#7c4dff;font-family:'JetBrains Mono',monospace;">2</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Smart Sweep <span style="background:rgba(0,200,83,0.15);color:var(--accent);font-weight:700;font-size:0.7rem;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;vertical-align:middle;">APP</span></div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">Idle cash sitting in the banking account auto-allocates into a SmartPortfolio when it passes a threshold. The user sets it once — "keep £500 liquid, invest the rest." Money works while they sleep. This is what makes eToro a financial brain, not just a bank.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid rgba(124,77,255,0.2);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:rgba(124,77,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#7c4dff;font-family:'JetBrains Mono',monospace;">3</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">NCW Debit Card <span style="background:rgba(255,82,82,0.15);color:#ff5252;font-weight:700;font-size:0.7rem;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;vertical-align:middle;">INFRA</span></div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">Spend crypto directly via your eToro card. Architecture: NCW → IBAN → Card — the card only sees fiat, keeping the EMI clean. No competitor combines a non-custodial wallet with a Visa debit card in one app. This is a crypto-native banking feature.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid rgba(124,77,255,0.2);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:rgba(124,77,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#7c4dff;font-family:'JetBrains Mono',monospace;">4</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Stock Gifting <span style="background:rgba(0,200,83,0.15);color:var(--accent);font-weight:700;font-size:0.7rem;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;vertical-align:middle;">APP</span></div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">Robinhood just launched this at their "Take Flight" event. Gift a friend $50 of Apple stock instead of a gift card. Social by design — fits eToro's DNA perfectly. Combine with the social feed and it becomes viral. eToro already has social + trading; adding gifting + banking connects them.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid rgba(124,77,255,0.2);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:rgba(124,77,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#7c4dff;font-family:'JetBrains Mono',monospace;">5</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">AI Auto-Allocation <span style="background:rgba(0,200,83,0.15);color:var(--accent);font-weight:700;font-size:0.7rem;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;vertical-align:middle;">APP</span></div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">An AI agent that looks at your income, spending patterns, goals, and risk profile — then automatically splits your money between spending, saving, and investing. Because it's built on eToro's open API, advanced users and developers can create their own allocation agents — custom rules, custom triggers, their logic running on our infrastructure. Same model as Trading.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid rgba(124,77,255,0.2);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:rgba(124,77,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#7c4dff;font-family:'JetBrains Mono',monospace;">6</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Goal Investor — Savings That Invest <span style="background:rgba(0,200,83,0.15);color:var(--accent);font-weight:700;font-size:0.7rem;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;vertical-align:middle;">APP</span></div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">Savings pockets that don't just sit there — they invest toward your goal. Set a target ("Tokyo Trip — £3,000"), and Goal Investor builds a risk-adjusted portfolio to get you there. No neo-bank offers this. Revolut Vaults hold cash. eToro Goal Investor grows it. This is the investing↔banking bridge that only we can build.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TRACK 3 -->
+    <div class="fade-in" style="margin-top:56px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <div style="background:rgba(255,255,255,0.12);color:var(--text-secondary);font-weight:800;font-size:0.8rem;padding:6px 14px;border-radius:8px;font-family:'JetBrains Mono',monospace;">TRACK 3</div>
+        <div style="font-weight:700;font-size:1.2rem;">Next Wave</div>
+        <div style="color:var(--text-muted);font-size:0.85rem;">— Phases 4–5. Full banking lifecycle.</div>
+      </div>
+
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;display:flex;gap:16px;align-items:center;">
+        <span><span style="background:rgba(255,82,82,0.15);color:#ff5252;font-weight:700;font-size:0.65rem;padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;">INFRA</span> = core platform rails</span>
+        <span><span style="background:rgba(0,200,83,0.15);color:var(--accent);font-weight:700;font-size:0.65rem;padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;">APP</span> = App Store feature</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:10px;">
+          <span style="color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:0.8rem;font-weight:700;">1</span>
+          <span style="font-size:0.9rem;">P2P Payments <span style="background:rgba(0,200,83,0.15);color:var(--accent);font-weight:700;font-size:0.65rem;padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;">APP</span></span>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:10px;">
+          <span style="color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:0.8rem;font-weight:700;">2</span>
+          <span style="font-size:0.9rem;">International Transfers <span style="background:rgba(255,82,82,0.15);color:#ff5252;font-weight:700;font-size:0.65rem;padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;">INFRA</span></span>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:10px;">
+          <span style="color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:0.8rem;font-weight:700;">3</span>
+          <span style="font-size:0.9rem;">Joint Accounts <span style="background:rgba(255,82,82,0.15);color:#ff5252;font-weight:700;font-size:0.65rem;padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;">INFRA</span></span>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:10px;">
+          <span style="color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:0.8rem;font-weight:700;">4</span>
+          <span style="font-size:0.9rem;">Bill Splitting <span style="background:rgba(0,200,83,0.15);color:var(--accent);font-weight:700;font-size:0.65rem;padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;">APP</span></span>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:10px;">
+          <span style="color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:0.8rem;font-weight:700;">5</span>
+          <span style="font-size:0.9rem;">Budgeting Tools <span style="background:rgba(0,200,83,0.15);color:var(--accent);font-weight:700;font-size:0.65rem;padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;">APP</span></span>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:10px;">
+          <span style="color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:0.8rem;font-weight:700;">6</span>
+          <span style="font-size:0.9rem;">Personal Loans (via partner) <span style="background:rgba(255,82,82,0.15);color:#ff5252;font-weight:700;font-size:0.65rem;padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;">INFRA</span></span>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:10px;">
+          <span style="color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:0.8rem;font-weight:700;">7</span>
+          <span style="font-size:0.9rem;">Travel Insurance (via partner) <span style="background:rgba(0,200,83,0.15);color:var(--accent);font-weight:700;font-size:0.65rem;padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;">APP</span></span>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:10px;">
+          <span style="color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:0.8rem;font-weight:700;">8</span>
+          <span style="font-size:0.9rem;">Portfolio Aggregation <span style="background:rgba(0,200,83,0.15);color:var(--accent);font-weight:700;font-size:0.65rem;padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;">APP</span></span>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:10px;">
+          <span style="color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:0.8rem;font-weight:700;">9</span>
+          <span style="font-size:0.9rem;">Credit Card <span style="background:rgba(255,82,82,0.15);color:#ff5252;font-weight:700;font-size:0.65rem;padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;">INFRA</span></span>
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+
+    <!-- Prerequisites -->
+    <div class="fade-in" style="margin-top:40px;">
+      <h3 style="margin-bottom:16px;font-size:1.1rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;">What This Plan Requires</h3>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">1</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">AI-Assisted Development</div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">AI-assisted development serves two practical roles. Internally: code generation, testing, and compliance review across the stack — the same toolchain eToro Trading uses. Externally: eToro's API and AI agent framework let developers build banking apps for the App Store. Both roles depend on a well-built Money API (see below).</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">2</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">eToro Money API</div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">The App Store model requires banking data and actions to be accessible via API — account balances, transaction history, card controls, payment initiation. This needs the same investment in documentation and developer experience as eToro Trading's API. It's the foundation that makes everything else in this plan scalable.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:var(--accent-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;">4</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Strengthen the Banking Team</div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">The existing banking team needs to be strengthened significantly. One option is reallocating the Denmark-based engineering team — they have the skills and capacity. If not Denmark, we need to invest in additional headcount or partner resources to close the gap.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:rgba(255,82,82,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#ff5252;font-family:'JetBrains Mono',monospace;">4</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Senior PM from a Competitor — Must Hire</div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">eToro does not have experienced banking product management for a plan this ambitious. We need to hire a senior PM who has <em>built this before</em> — from Revolut, N26, Wise, or Monzo. Someone who knows the playbook, the pitfalls, and the pace required.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:rgba(255,82,82,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#ff5252;font-family:'JetBrains Mono',monospace;">5</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Tribe Bottleneck — Acknowledged Risk</div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">Tribe controls the ledger and card processing. Their delivery velocity directly constrains ours. This plan assumes Tribe delivers — but the partnership decision (stay, acquire, or replace) will define whether this timeline is achievable.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:rgba(255,82,82,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#ff5252;font-family:'JetBrains Mono',monospace;">6</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">JPM/Citi/HSBC — Scope & Resources Unknown</div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">The banking partner integration could range from lightweight API work to a full IBAN migration. Until the big-picture conversation happens, we can't size the engineering effort or timeline impact. This is a known unknown.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;background:rgba(124,77,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#7c4dff;font-family:'JetBrains Mono',monospace;">7</div>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;">Acquire a Small Company — Accelerate Time to Market</div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">Acquiring a small, mature fintech company brings both a proven product and experienced talent (acqui-hire) — dramatically shortening time to market. A search process is already underway and should be continued with urgency. The right acquisition could leapfrog months of in-house development.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+
+
+    <a href="#s2" class="back-to-toc">↑ Back to Table of Contents</a>
+  </section>
+  
+  <div class="divider"></div>
+
+<!-- SECTION 7: HOW WE LAUNCH IT -->
+  <section class="section" id="s7">
+    <div class="fade-in">
+      <div class="section-label"><span class="num" data-watermark="05">5</span> How We Launch It</div>
+      <h2>Five Campaigns, One Story</h2>
+      <p class="section-intro">40M users already trust eToro with their investments. The job isn't awareness — it's repositioning: eToro is where your money <em>lives</em>.</p>
+    </div>
+
+    <!-- Core Positioning -->
+    <div class="fade-in" style="margin-top:32px;">
+      <div style="background:var(--bg-card);border:1px solid var(--border-accent);border-radius:16px;padding:32px;text-align:center;">
+        <div style="font-size:1.6rem;font-weight:800;margin-bottom:8px;">Not a bank. Not a broker. <span style="color:var(--accent);">The SuperApp.</span></div>
+        <div style="color:var(--text-secondary);font-size:0.95rem;line-height:1.7;max-width:650px;margin:0 auto;">
+          Investing + banking + social + crypto in one app. No competitor currently offers all four.
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 Audiences — compact row -->
+    <div class="fade-in" style="margin-top:28px;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;" class="audience-row">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;">
+          <div style="background:var(--accent-dim);color:var(--accent);font-weight:700;font-size:0.7rem;padding:3px 10px;border-radius:5px;display:inline-block;margin-bottom:8px;">40M+ EXISTING</div>
+          <div style="font-weight:700;font-size:0.88rem;">"Your money is already here."</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;">
+          <div style="background:rgba(124,77,255,0.15);color:#7c4dff;font-weight:700;font-size:0.7rem;padding:3px 10px;border-radius:5px;display:inline-block;margin-bottom:8px;">NEW — BANK FIRST</div>
+          <div style="font-weight:700;font-size:0.88rem;">"Free account. Discover investing."</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;">
+          <div style="background:rgba(255,109,0,0.15);color:#ff6d00;font-weight:700;font-size:0.7rem;padding:3px 10px;border-radius:5px;display:inline-block;margin-bottom:8px;">MARKET & INVESTORS</div>
+          <div style="font-weight:700;font-size:0.88rem;">"The financial SuperApp."</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Campaign Showcase -->
+    <div class="fade-in" style="margin-top:48px;">
+      <h3 style="margin-bottom:8px;font-size:1.1rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;">Campaign Concepts</h3>
+      <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:24px;">Five ready-to-produce campaigns — each targeting a different audience and moment. These are executable briefs, not placeholders.</p>
+
+      <!-- Campaign 5: Hero Video — "One Day" (moved to top) -->
+      <div style="background:linear-gradient(135deg, rgba(0,200,83,0.08), rgba(124,77,255,0.08));border:1px solid var(--border-accent);border-radius:16px;padding:36px;margin-bottom:20px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--gradient-1);"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <div style="background:var(--accent);color:#000;font-weight:700;font-size:0.75rem;padding:4px 12px;border-radius:6px;">HERO CAMPAIGN</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);">Brand Film · YouTube + TV + Social + Launch Event</div>
+        </div>
+        <div style="font-size:1.4rem;font-weight:800;margin-bottom:16px;">"One Day" — 60-Second Brand Film</div>
+
+        <div style="margin-bottom:20px;border-radius:12px;overflow:hidden;position:relative;cursor:pointer;" onclick="(function(el){var v=el.querySelector('video');if(v.requestFullscreen)v.requestFullscreen();else if(v.webkitEnterFullscreen)v.webkitEnterFullscreen();})(this)">
+          <video id="hero-video" muted loop playsinline preload="none" style="width:100%;display:block;border-radius:12px;">
+            <source data-src="campaigns/one-day-etoro.mp4?v=2" type="video/mp4">
+          </video>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:80px;height:80px;background:rgba(0,0,0,0.6);border-radius:50%;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0.85;backdrop-filter:blur(4px);">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7L8 5z" fill="white"/></svg>
+          </div>
+        </div>
+        <script>
+        (function(){
+          var v=document.getElementById('hero-video');
+          // Lazy-load: only load video when scrolled into view
+          var lazyObs=new IntersectionObserver(function(entries){
+            entries.forEach(function(entry){
+              if(entry.isIntersecting){
+                var src=v.querySelector('source[data-src]');
+                if(src){src.setAttribute('src',src.getAttribute('data-src'));src.removeAttribute('data-src');v.load();v.play();}
+                lazyObs.unobserve(v);
+              }
+            });
+          },{rootMargin:'200px'});
+          lazyObs.observe(v);
+          if(screen.orientation){
+            screen.orientation.addEventListener('change',function(){
+              if(screen.orientation.type.startsWith('landscape')&&document.fullscreenElement!==v){
+                if(v.requestFullscreen)v.requestFullscreen();
+                else if(v.webkitEnterFullscreen)v.webkitEnterFullscreen();
+              }
+            });
+          }
+          document.addEventListener('fullscreenchange',function(){
+            if(document.fullscreenElement===v){v.muted=false;v.currentTime=0;v.play();}
+            else{v.muted=true;}
+          });
+        })();
+        </script>
+        
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px;">
+          <div style="color:var(--accent);font-weight:700;font-size:0.8rem;margin-bottom:10px;">SCRIPT</div>
+          <div style="color:var(--text-secondary);font-size:0.9rem;line-height:1.9;font-style:italic;">
+            <div style="margin-bottom:8px;"><span style="color:var(--text-primary);font-weight:600;">[06:45]</span> Coffee shop. Tap to pay with eToro card. Stock-Back kicks in — £0.14 flows straight into Apple shares. <em style="color:var(--accent);">Spending → Investing.</em></div>
+            <div style="margin-bottom:8px;"><span style="color:var(--text-primary);font-weight:600;">[09:15]</span> Notification: "NVIDIA +12%." One tap to take profit — money moves to savings goal: "Tokyo Trip £2,400/£3,000." <em style="color:var(--accent);">Investing → Saving.</em></div>
+            <div style="margin-bottom:8px;"><span style="color:var(--text-primary);font-weight:600;">[12:30]</span> Passes a shop window. Checks the app — spending, savings, and investments in one view, all connected. Decides to wait. The portfolio is compounding. <em style="color:var(--accent);">One glance, whole picture.</em></div>
+            <div style="margin-bottom:8px;"><span style="color:var(--text-primary);font-weight:600;">[19:00]</span> On the couch. A top investor posts a trade. One tap to copy — funded directly from savings buffer. No transfers, no waiting. <em style="color:var(--accent);">Saving → Copy Trading.</em></div>
+            <div style="margin-bottom:8px;"><span style="color:var(--text-primary);font-weight:600;">[22:00]</span> Daily recap: Spent £47 → Earned £3.20 Stock-Back → Grew £1,180 → Saved £400. All connected. All flowing. <em style="color:var(--accent);">The loop never stops.</em></div>
+            <div><span style="color:var(--text-primary);font-weight:600;">[END]</span> "Spend. Save. Invest. Copy. <strong>One app. One flow.</strong>" — eToro.</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div>
+            <div style="color:var(--accent);font-weight:700;font-size:0.8rem;margin-bottom:8px;">TONE & FEEL</div>
+            <div style="color:var(--text-secondary);font-size:0.88rem;line-height:1.7;">Warm, aspirational, grounded. Real person, real day. No suits, no trading floors, no crypto bros. This is about normal life — elevated by better financial tools. Think Apple "Shot on iPhone" meets Monzo's design sensibility. The product is the hero, but the human is the story.</div>
+          </div>
+          <div>
+            <div style="color:var(--accent);font-weight:700;font-size:0.8rem;margin-bottom:8px;">DISTRIBUTION</div>
+            <div style="color:var(--text-secondary);font-size:0.88rem;line-height:1.7;">
+              <div style="margin-bottom:6px;"><strong>60s:</strong> YouTube pre-roll, connected TV, launch event</div>
+              <div style="margin-bottom:6px;"><strong>30s:</strong> Instagram/TikTok cut (morning + coffee + end card)</div>
+              <div style="margin-bottom:6px;"><strong>15s:</strong> Bumper ads (single moment + logo)</div>
+              <div><strong>6s:</strong> "Coffee. Tap. Invest." — YouTube bumper</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign 1: "Already Here" — Existing Users -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:20px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--gradient-1);"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <div style="background:var(--accent-dim);color:var(--accent);font-weight:700;font-size:0.75rem;padding:4px 12px;border-radius:6px;">CAMPAIGN 1</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);">Existing Users · In-App + Email + Push</div>
+        </div>
+        <div style="font-size:1.3rem;font-weight:800;margin-bottom:16px;">"Your Money Is Already Here"</div>
+        <div style="margin-bottom:20px;border-radius:12px;overflow:hidden;">
+          <img src="campaigns/campaign1-already-here.png" alt="Campaign 1 — Your Money Is Already Here" style="width:100%;display:block;border-radius:12px;">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div>
+            <div style="color:var(--accent);font-weight:700;font-size:0.8rem;margin-bottom:8px;">THE IDEA</div>
+            <div style="color:var(--text-secondary);font-size:0.88rem;line-height:1.7;">You already trust eToro with your portfolio. Now your portfolio has a card. Animated sequence: a user's portfolio value morphs into a physical eToro card — same money, new superpower. Tap to pay, round up into stocks, earn stock-back on every purchase.</div>
+          </div>
+          <div>
+            <div style="color:var(--accent);font-weight:700;font-size:0.8rem;margin-bottom:8px;">EXECUTION</div>
+            <div style="color:var(--text-secondary);font-size:0.88rem;line-height:1.7;">
+              <div style="margin-bottom:6px;"><strong>Format:</strong> 15s in-app animation + email sequence (3 touches)</div>
+              <div style="margin-bottom:6px;"><strong>CTA:</strong> "Activate Your Card" — one tap, pre-approved</div>
+              <div style="margin-bottom:6px;"><strong>Targeting:</strong> Club members + users with $5K+ AUM</div>
+              <div><strong>KPI:</strong> Card activation rate, first spend within 7 days</div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding:16px;background:rgba(0,200,83,0.05);border-radius:10px;border:1px solid rgba(0,200,83,0.1);">
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:6px;">HEADLINE VARIANTS</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:0.85rem;">
+            <span style="background:var(--bg-primary);padding:6px 14px;border-radius:8px;border:1px solid var(--border);">"Your portfolio now fits in your pocket"</span>
+            <span style="background:var(--bg-primary);padding:6px 14px;border-radius:8px;border:1px solid var(--border);">"Same money. New superpower."</span>
+            <span style="background:var(--bg-primary);padding:6px 14px;border-radius:8px;border:1px solid var(--border);">"Spend, round up, grow. Repeat."</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign 2: "Bank First" — New User Acquisition -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:20px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg, #7c4dff, #448aff);"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <div style="background:rgba(124,77,255,0.15);color:#7c4dff;font-weight:700;font-size:0.75rem;padding:4px 12px;border-radius:6px;">CAMPAIGN 2</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);">New User Acquisition · Paid Social + YouTube + OOH</div>
+        </div>
+        <div style="font-size:1.3rem;font-weight:800;margin-bottom:16px;">"Free Account. Zero Catch."</div>
+        <div style="margin-bottom:20px;border-radius:12px;overflow:hidden;">
+          <img src="campaigns/campaign2-bank-first.png" alt="Campaign 2 — Free Account. Zero Catch." style="width:100%;display:block;border-radius:12px;">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div>
+            <div style="color:#7c4dff;font-weight:700;font-size:0.8rem;margin-bottom:8px;">THE IDEA</div>
+            <div style="color:var(--text-secondary);font-size:0.88rem;line-height:1.7;">People who'd never sign up for a "trading platform" will sign up for a free bank account. The ad never mentions investing — it's a clean, modern banking pitch. IBAN in 2 minutes. Free card. Apple Pay. Then once they're in, the app gently surfaces round-ups, stock-back, copy trading. The hook is banking. The product is everything.</div>
+          </div>
+          <div>
+            <div style="color:#7c4dff;font-weight:700;font-size:0.8rem;margin-bottom:8px;">EXECUTION</div>
+            <div style="color:var(--text-secondary);font-size:0.88rem;line-height:1.7;">
+              <div style="margin-bottom:6px;"><strong>Format:</strong> 30s video (TikTok/Reels/YouTube Shorts) + static OOH</div>
+              <div style="margin-bottom:6px;"><strong>CTA:</strong> "Open your free account" — no trading language</div>
+              <div style="margin-bottom:6px;"><strong>Targeting:</strong> 25-40, urban, currently with N26/Revolut/traditional bank</div>
+              <div><strong>KPI:</strong> Account opens, IBAN activation, 30-day card usage</div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding:16px;background:rgba(124,77,255,0.05);border-radius:10px;border:1px solid rgba(124,77,255,0.1);">
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:6px;">VIDEO SCRIPT (30s)</div>
+          <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.7;font-style:italic;">
+            [Phone screen — clean eToro banking UI] "Open a free account." [Card appears, taps at coffee shop] "Get a free card." [Salary notification lands] "Receive your salary." [Round-up animation: £0.43 spare change flows into a mini portfolio] "And when you're ready… your money starts working." [eToro logo] "eToro. Your whole financial life."
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign 3: "Stock-Back" — Product Feature Launch -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:20px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg, #ff6d00, #ffc107);"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <div style="background:rgba(255,109,0,0.15);color:#ff6d00;font-weight:700;font-size:0.75rem;padding:4px 12px;border-radius:6px;">CAMPAIGN 3</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);">Feature Launch · Social + PR + In-App</div>
+        </div>
+        <div style="font-size:1.3rem;font-weight:800;margin-bottom:16px;">"Every Coffee Builds Your Portfolio"</div>
+        <div style="margin-bottom:20px;border-radius:12px;overflow:hidden;">
+          <img src="campaigns/campaign3-stock-back.png" alt="Campaign 3 — Every Coffee Builds Your Portfolio" style="width:100%;display:block;border-radius:12px;">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div>
+            <div style="color:#ff6d00;font-weight:700;font-size:0.8rem;margin-bottom:8px;">THE IDEA</div>
+            <div style="color:var(--text-secondary);font-size:0.88rem;line-height:1.7;">Stock-back rewards + round-ups = your daily spending builds wealth. Buy coffee → earn 0.5% in Tesla stock. Buy groceries → spare change rounds up into your portfolio. A year of normal spending turns into a growing investment. Visualize it: a year-end "spending report" showing how €2,400 in everyday purchases generated €47 in stock-back and €380 in round-up investments.</div>
+          </div>
+          <div>
+            <div style="color:#ff6d00;font-weight:700;font-size:0.8rem;margin-bottom:8px;">EXECUTION</div>
+            <div style="color:var(--text-secondary);font-size:0.88rem;line-height:1.7;">
+              <div style="margin-bottom:6px;"><strong>Format:</strong> Interactive calculator + social carousel + PR</div>
+              <div style="margin-bottom:6px;"><strong>CTA:</strong> "See what your spending could grow into"</div>
+              <div style="margin-bottom:6px;"><strong>Targeting:</strong> All card users + prospects interested in passive investing</div>
+              <div><strong>KPI:</strong> Stock-back opt-in rate, round-up activation, social shares</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign 4: "NCW Card" — Crypto Audience -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:20px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg, #00bcd4, #26a69a);"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <div style="background:rgba(0,188,212,0.15);color:#00bcd4;font-weight:700;font-size:0.75rem;padding:4px 12px;border-radius:6px;">CAMPAIGN 4</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);">Crypto Community · Twitter/X + Discord + Crypto PR</div>
+        </div>
+        <div style="font-size:1.3rem;font-weight:800;margin-bottom:16px;">"Your Wallet. Your Keys. Your Card."</div>
+        <div style="margin-bottom:20px;border-radius:12px;overflow:hidden;">
+          <img src="campaigns/campaign4-ncw-card.png" alt="Campaign 4 — Your Wallet. Your Keys. Your Card." style="width:100%;display:block;border-radius:12px;">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div>
+            <div style="color:#00bcd4;font-weight:700;font-size:0.8rem;margin-bottom:8px;">THE IDEA</div>
+            <div style="color:var(--text-secondary);font-size:0.88rem;line-height:1.7;">The first debit card powered by a non-custodial wallet. Your crypto, your keys — and now you can spend it anywhere Visa is accepted. No CEX withdrawal needed. The card sees fiat; the wallet holds crypto. Architecture: NCW → auto-convert → IBAN → card. For the crypto-native audience, this solves the core problem: self-custody + real-world spending in one card.</div>
+          </div>
+          <div>
+            <div style="color:#00bcd4;font-weight:700;font-size:0.8rem;margin-bottom:8px;">EXECUTION</div>
+            <div style="color:var(--text-secondary);font-size:0.88rem;line-height:1.7;">
+              <div style="margin-bottom:6px;"><strong>Format:</strong> Twitter/X thread + explainer video (60s) + crypto press exclusive</div>
+              <div style="margin-bottom:6px;"><strong>CTA:</strong> "Join the waitlist" — exclusivity-first</div>
+              <div style="margin-bottom:6px;"><strong>Targeting:</strong> Crypto Twitter, DeFi users, Fireblocks/NCW community</div>
+              <div><strong>KPI:</strong> Waitlist signups, crypto-to-card conversion, CT engagement</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <a href="#s2" class="back-to-toc">↑ Back to Table of Contents</a>
+  </section>
+  
+  <div class="divider"></div>
+
+<!-- SECTION 8: STRATEGIC PARTNERSHIPS -->
+  <section class="section" id="s8">
+    <div class="fade-in">
+      <div class="section-label"><span class="num" data-watermark="06">6</span> Strategic Partnerships</div>
+      <h2>Two Important Decisions</h2>
+      <p class="section-intro">The banking strategy depends on two critical partnerships. Both carry major opportunity and major risk. These are the decisions that define the pace and shape of everything we build.</p>
+    </div>
+
+    <!-- JP MORGAN / CITI -->
+    <div class="fade-in" style="margin-top:32px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <div style="background:var(--accent);color:var(--bg-primary);font-weight:800;font-size:0.8rem;padding:6px 14px;border-radius:8px;">DECISION 1</div>
+        <div style="font-weight:700;font-size:1.2rem;">Banking Partner — JP Morgan, Citi or HSBC</div>
+      </div>
+
+      <!-- Where we are -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px;">
+        <div style="font-weight:700;color:var(--accent);margin-bottom:10px;">📍 Where We Are Today</div>
+        <div style="color:var(--text-secondary);font-size:0.9rem;line-height:1.7;">
+          JPM is already a <span style="color:var(--text-primary);font-weight:600;">live partner</span> — they hold client accounts and corporate funds. Direct debit infrastructure discussions are ongoing. But the big picture conversation — <em>"become the core banking partner powering eToro's 40M users"</em> — has never happened. That conversation needs to happen.
+        </div>
+      </div>
+
+      <!-- Opportunity -->
+      <div style="background:var(--bg-card);border:1px solid rgba(0,200,83,0.2);border-radius:12px;padding:24px;margin-bottom:16px;">
+        <div style="font-weight:700;color:var(--accent);margin-bottom:12px;">✅ The Opportunity</div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:0.9rem;color:var(--text-secondary);line-height:1.6;">
+          <div><span style="color:var(--text-primary);font-weight:600;">Solves our hardest gaps.</span> Interest on cash, deposit protection, multi-currency accounts (Virtual Account Management), international transfers — all things outside EMI scope but within JPM's banking infrastructure.</div>
+          <div><span style="color:var(--text-primary);font-weight:600;">EMI handles 80%. JPM handles the other 20%.</span> 80% of our roadmap is buildable under EMI. The remaining ones — interest, deposit insurance, institutional-grade FX — are exactly what a tier-1 bank provides.</div>
+          <div><span style="color:var(--text-primary);font-weight:600;">"JPM Inside" branding.</span> No neo-bank can claim this. Revolut, N26, Monzo are their own banks. eToro would be <em>backed by a top-3 global bank</em>. Strong trust signal for large depositors, differentiates the competitive positioning.</div>
+          <div><span style="color:var(--text-primary);font-weight:600;">Win-win deal structure.</span> JPM gets access to 40M+ users without building consumer apps. eToro gets institutional banking without a 5-year regulatory build. Both sides have clear value.</div>
+          <div><span style="color:var(--text-primary);font-weight:600;">Crypto bridge potential.</span> JPM's Kinexys (JPM Coin) could enable tokenized deposit settlement — a future path for NCW-to-card and crypto-to-fiat flows.</div>
+        </div>
+      </div>
+
+      <!-- Risk -->
+      <div style="background:var(--bg-card);border:1px solid rgba(255,82,82,0.2);border-radius:12px;padding:24px;margin-bottom:16px;">
+        <div style="font-weight:700;color:#ff5252;margin-bottom:12px;">⚠️ The Risk</div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:0.9rem;color:var(--text-secondary);line-height:1.6;">
+          <div><span style="color:var(--text-primary);font-weight:600;">Dependency on a giant.</span> JPM's priorities are not eToro's priorities. Integration timelines could be measured in years, not months. A tier-1 bank moves at tier-1 speed.</div>
+          <div><span style="color:var(--text-primary);font-weight:600;">Commercial terms unknown.</span> Revenue share, per-transaction fees, exclusivity — none of this has been discussed. The economics could be favourable or could eat into margins.</div>
+          <div><span style="color:var(--text-primary);font-weight:600;">Regulatory complexity.</span> JPM partnership may require regulatory approvals on both sides. Compliance alignment across jurisdictions adds time.</div>
+          <div><span style="color:var(--text-primary);font-weight:600;">Alternatives: Citi, HSBC.</span> Both offer similar infrastructure and may be more agile with fintech partnerships. Having backup options keeps leverage in the negotiation.</div>
+        </div>
+      </div>
+
+      <!-- Directions -->
+      <div style="background:var(--bg-card);border:1px solid rgba(124,77,255,0.2);border-radius:12px;padding:24px;">
+        <div style="font-weight:700;color:#7c4dff;margin-bottom:12px;">🔀 Possible Directions</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="flex-shrink:0;width:28px;height:28px;background:rgba(124,77,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#7c4dff;">A</div>
+            <div>
+              <div style="font-weight:600;font-size:0.9rem;margin-bottom:2px;">Full Strategic Partnership</div>
+              <div style="color:var(--text-secondary);font-size:0.85rem;">JPM becomes the core banking partner — deposits, FX, payments, deposit insurance, "JPM Inside" branding. Deep integration, long-term commitment, maximum upside.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="flex-shrink:0;width:28px;height:28px;background:rgba(124,77,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#7c4dff;">B</div>
+            <div>
+              <div style="font-weight:600;font-size:0.9rem;margin-bottom:2px;">Targeted Integration</div>
+              <div style="color:var(--text-secondary);font-size:0.85rem;">Use JPM for specific gaps only — interest on cash (JPM holds deposits), multi-currency (Virtual Accounts), direct debits. Keep the rest independent. Lower risk, faster execution.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="flex-shrink:0;width:28px;height:28px;background:rgba(124,77,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#7c4dff;">C</div>
+            <div>
+              <div style="font-weight:600;font-size:0.9rem;margin-bottom:2px;">Multi-Track — JPM / Citi / HSBC</div>
+              <div style="color:var(--text-secondary);font-size:0.85rem;">Explore multiple partners in parallel. Create competitive tension. Choose the partner that moves fastest and offers the best terms. Avoids single-point dependency.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRIBE -->
+    <div class="fade-in" style="margin-top:56px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <div style="background:#ff5252;color:white;font-weight:800;font-size:0.8rem;padding:6px 14px;border-radius:8px;">DECISION 2</div>
+        <div style="font-weight:700;font-size:1.2rem;">Tribe — Stay, Acquire, or Replace</div>
+      </div>
+
+      <!-- Where we are -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px;">
+        <div style="font-weight:700;color:var(--accent);margin-bottom:10px;">📍 Where We Are Today</div>
+        <div style="color:var(--text-secondary);font-size:0.9rem;line-height:1.7;">
+          Tribe is eToro Money's <span style="color:var(--text-primary);font-weight:600;">card processor and core ledger</span>. They handle authorization, settlement, card issuance, and the transaction ledger. They are effectively a team extension for the Money BU. The relationship works — but Tribe <span style="color:#ff5252;font-weight:600;">controls the ledger, which means Tribe controls the pace</span>. And the pace has been slow.
+        </div>
+      </div>
+
+      <!-- Opportunity -->
+      <div style="background:var(--bg-card);border:1px solid rgba(0,200,83,0.2);border-radius:12px;padding:24px;margin-bottom:16px;">
+        <div style="font-weight:700;color:var(--accent);margin-bottom:12px;">✅ What Tribe Gives Us</div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:0.9rem;color:var(--text-secondary);line-height:1.6;">
+          <div><span style="color:var(--text-primary);font-weight:600;">Proven infrastructure.</span> Cards work. Payments settle. The system is live and stable across UK and EU. Replacing it is non-trivial.</div>
+          <div><span style="color:var(--text-primary);font-weight:600;">Speed to market for new geos.</span> Tribe has partnerships for Australia and potentially other markets. Going through Tribe for geo expansion could be faster than building from scratch.</div>
+          <div><span style="color:var(--text-primary);font-weight:600;">Team extension.</span> The Money BU is small. Tribe provides operational capacity that would be expensive to build in-house.</div>
+        </div>
+      </div>
+
+      <!-- Risk -->
+      <div style="background:var(--bg-card);border:1px solid rgba(255,82,82,0.2);border-radius:12px;padding:24px;margin-bottom:16px;">
+        <div style="font-weight:700;color:#ff5252;margin-bottom:12px;">⚠️ The Risk</div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:0.9rem;color:var(--text-secondary);line-height:1.6;">
+          <div><span style="color:var(--text-primary);font-weight:600;">They own the ledger.</span> Every new feature, every change, every integration goes through Tribe. If they're slow, we're slow. If they de-prioritize us, we're stuck. This is the single biggest infrastructure risk in the banking plan.</div>
+          <div><span style="color:var(--text-primary);font-weight:600;">Delivery velocity has been low.</span> Features that should take weeks take months. The gap between what we want to build and what Tribe can deliver is growing.</div>
+          <div><span style="color:var(--text-primary);font-weight:600;">Strategic misalignment.</span> eToro wants to become a SuperApp. Tribe is a card processor. Their roadmap may not align with eToro's ambition — especially for features like round-ups, Smart Sweep, or NCW integration that sit outside traditional card processing.</div>
+          <div><span style="color:var(--text-primary);font-weight:600;">Lock-in.</span> Migrating off Tribe would be a major project — account migration, card re-issuance, ledger migration. The longer we stay, the harder it gets to leave.</div>
+        </div>
+      </div>
+
+      <!-- Directions -->
+      <div style="background:var(--bg-card);border:1px solid rgba(124,77,255,0.2);border-radius:12px;padding:24px;">
+        <div style="font-weight:700;color:#7c4dff;margin-bottom:12px;">🔀 Possible Directions</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="flex-shrink:0;width:28px;height:28px;background:rgba(124,77,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#7c4dff;">A</div>
+            <div>
+              <div style="font-weight:600;font-size:0.9rem;margin-bottom:2px;">Stay + Negotiate</div>
+              <div style="color:var(--text-secondary);font-size:0.85rem;">Keep Tribe but renegotiate SLAs, delivery commitments, and priority. Push for dedicated engineering resources. Accept the dependency but manage it aggressively. Lowest disruption, but doesn't solve the root problem.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="flex-shrink:0;width:28px;height:28px;background:rgba(124,77,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#7c4dff;">B</div>
+            <div>
+              <div style="font-weight:600;font-size:0.9rem;margin-bottom:2px;">Acquire Tribe (or Key Team)</div>
+              <div style="color:var(--text-secondary);font-size:0.85rem;">Buy the team and technology. Bring the ledger in-house. Full control over roadmap and velocity. Expensive upfront, but eliminates the dependency permanently and gives eToro a proprietary payments stack.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="flex-shrink:0;width:28px;height:28px;background:rgba(124,77,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#7c4dff;">C</div>
+            <div>
+              <div style="font-weight:600;font-size:0.9rem;margin-bottom:2px;">Migrate to a New Processor</div>
+              <div style="color:var(--text-secondary);font-size:0.85rem;">Replace Tribe with a modern card-as-a-service provider (Marqeta, Adyen, Stripe Issuing). Painful migration — card re-issuance, ledger rebuild — but opens the door to better velocity and API-first integration for features like round-ups and NCW.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="flex-shrink:0;width:28px;height:28px;background:rgba(124,77,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#7c4dff;">D</div>
+            <div>
+              <div style="font-weight:600;font-size:0.9rem;margin-bottom:2px;">Build In-House (Gradually)</div>
+              <div style="color:var(--text-secondary);font-size:0.85rem;">Start building a parallel ledger and processing layer. Run Tribe for existing products while new features (round-ups, Smart Sweep, NCW card) run on the new stack. Migrate over time. Requires significant engineering investment but gives full independence.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Existing Partner Stack -->
+    <div class="fade-in" style="margin-top:56px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <div style="font-weight:700;font-size:1.2rem;">Existing Partners — Ready for Expansion</div>
+      </div>
+      <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;margin-bottom:20px;">These partners are already live and can service a major expansion of the banking program.</p>
+
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th style="text-align:left;">Partner</th>
+            <th style="text-align:left;">Role</th>
+            <th style="text-align:left;">Expansion Potential</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="metric-label">Tribe</td>
+            <td style="color:var(--text-secondary);font-size:0.88rem;">Card processor + ledger</td>
+            <td style="color:var(--text-secondary);font-size:0.88rem;">Global card issuance, AU partnerships, multi-currency card</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Visa</td>
+            <td style="color:var(--text-secondary);font-size:0.88rem;">Card scheme</td>
+            <td style="color:var(--text-secondary);font-size:0.88rem;">Cross-border network for USD global card, Platinum program expansion</td>
+          </tr>
+          <tr>
+            <td class="metric-label">TAG</td>
+            <td style="color:var(--text-secondary);font-size:0.88rem;">Card production</td>
+            <td style="color:var(--text-secondary);font-size:0.88rem;">Physical card production for new markets</td>
+          </tr>
+          <tr>
+            <td class="metric-label">ClearBank</td>
+            <td style="color:var(--text-secondary);font-size:0.88rem;">UK GBP IBANs + safeguarding</td>
+            <td style="color:var(--text-secondary);font-size:0.88rem;">Scale UK account base, support direct debits</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Banking Circle + OpenPayd</td>
+            <td style="color:var(--text-secondary);font-size:0.88rem;">EU EUR IBANs + SWIFT</td>
+            <td style="color:var(--text-secondary);font-size:0.88rem;">Multi-currency IBANs, SWIFT for international transfers</td>
+          </tr>
+          <tr>
+            <td class="metric-label">Volt (UK) + Tink (EU)</td>
+            <td style="color:var(--text-secondary);font-size:0.88rem;">Open Banking</td>
+            <td style="color:var(--text-secondary);font-size:0.88rem;">Account aggregation, instant funding, portfolio aggregation</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+
+    <a href="#s2" class="back-to-toc">↑ Back to Table of Contents</a>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 10: REGULATORY FRAMEWORK -->
+  <section class="section" id="s10">
+    <div class="fade-in">
+      <div class="section-label"><span class="num" data-watermark="07">7</span> Regulatory Framework</div>
+      <h2>Navigating the Rules</h2>
+      <p class="section-intro">eToro Money operates under two EMI licences. This defines exactly what we can build in-house, what requires a partner, and how each roadmap feature maps to our regulatory perimeter.</p>
+    </div>
+
+    <!-- Two Entities -->
+    <div class="fade-in" style="margin-top:32px;">
+      <h3 style="margin-bottom:16px;font-size:1.1rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;">Our Licences</h3>
+      <div class="reg-grid-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;">
+          <div style="font-weight:700;font-size:1rem;margin-bottom:8px;">🇬🇧 eToro Money UK Ltd</div>
+          <div style="display:flex;flex-direction:column;gap:4px;font-size:0.85rem;color:var(--text-secondary);">
+            <div><span style="color:var(--text-primary);">Licence:</span> Electronic Money Institution</div>
+            <div><span style="color:var(--text-primary);">Regulator:</span> FCA (Financial Conduct Authority)</div>
+            <div><span style="color:var(--text-primary);">Currency:</span> GBP</div>
+            <div><span style="color:var(--text-primary);">Banking Partner:</span> ClearBank</div>
+            <div><span style="color:var(--text-primary);">Safeguarding:</span> ClearBank (GBP)</div>
+          </div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;">
+          <div style="font-weight:700;font-size:1rem;margin-bottom:8px;">🇪🇺 eToro Money Malta Ltd</div>
+          <div style="display:flex;flex-direction:column;gap:4px;font-size:0.85rem;color:var(--text-secondary);">
+            <div><span style="color:var(--text-primary);">Licence:</span> Electronic Money Institution</div>
+            <div><span style="color:var(--text-primary);">Regulator:</span> MFSA (Malta Financial Services Authority)</div>
+            <div><span style="color:var(--text-primary);">Currency:</span> EUR</div>
+            <div><span style="color:var(--text-primary);">Banking Partner:</span> Banking Circle + OpenPayd</div>
+            <div><span style="color:var(--text-primary);">Safeguarding:</span> Banking Circle (EUR)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EMI Perimeter -->
+    <div class="fade-in" style="margin-top:40px;">
+      <h3 style="margin-bottom:16px;font-size:1.1rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;">The EMI Perimeter — What We Can and Can't Build</h3>
+      <div class="reg-grid-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div style="background:var(--bg-card);border:1px solid rgba(0,200,83,0.2);border-radius:12px;padding:20px;">
+          <div style="font-weight:700;color:var(--accent);margin-bottom:12px;font-size:0.95rem;">✅ Within EMI Scope</div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:0.88rem;color:var(--text-secondary);">
+            <div>Payment accounts + IBANs</div>
+            <div>Debit cards + virtual cards + prepaid</div>
+            <div>Domestic + cross-border transfers</div>
+            <div>FX conversion at point of sale</div>
+            <div>Direct debits (inbound + outbound)</div>
+            <div>Open Banking (PIS / AIS)</div>
+            <div>E-money issuance + redemption</div>
+            <div>Multi-currency wallets</div>
+            <div>P2P payments (eToro-to-eToro)</div>
+            <div>Spending notifications + categorization</div>
+          </div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid rgba(255,82,82,0.2);border-radius:12px;padding:20px;">
+          <div style="font-weight:700;color:#ff5252;margin-bottom:12px;font-size:0.95rem;">❌ Outside EMI Scope</div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:0.88rem;color:var(--text-secondary);">
+            <div>Lending / credit / personal loans</div>
+            <div>Interest on deposits</div>
+            <div>Investment products / portfolio management</div>
+            <div>Insurance products</div>
+            <div>Deposit protection (FSCS / DGS)</div>
+            <div>Credit cards</div>
+          </div>
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:0.82rem;color:var(--text-muted);font-style:italic;">
+            These require either the investment entity, a banking partner (JPM/Citi/HSBC), or a licensed third party.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature-to-Regulatory Mapping -->
+    <div class="fade-in" style="margin-top:40px;">
+      <h3 style="margin-bottom:16px;font-size:1.1rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;">Roadmap Features → Regulatory Route</h3>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:separate;border-spacing:0;font-size:0.85rem;">
+          <thead>
+            <tr style="text-align:left;">
+              <th style="padding:12px 16px;border-bottom:1px solid var(--border);color:var(--text-muted);font-weight:600;">Feature</th>
+              <th style="padding:12px 16px;border-bottom:1px solid var(--border);color:var(--text-muted);font-weight:600;">Route</th>
+              <th style="padding:12px 16px;border-bottom:1px solid var(--border);color:var(--text-muted);font-weight:600;">Entity / Partner</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="padding:10px 16px;border-bottom:1px solid var(--border);">Virtual Card + Apple Pay</td><td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="color:var(--accent);">EMI ✅</span></td><td style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);">eToro Money + Tribe + Visa</td></tr>
+            <tr><td style="padding:10px 16px;border-bottom:1px solid var(--border);">Direct Debit Connectivity</td><td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="color:var(--accent);">EMI ✅</span></td><td style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);">eToro Money + ClearBank / Banking Circle</td></tr>
+            <tr><td style="padding:10px 16px;border-bottom:1px solid var(--border);">Global USD Card</td><td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="color:var(--accent);">EMI ✅</span></td><td style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);">eToro Money + Visa cross-border</td></tr>
+            <tr><td style="padding:10px 16px;border-bottom:1px solid var(--border);">Multi-Currency Balances</td><td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="color:var(--accent);">EMI ✅</span></td><td style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);">eToro Money + Tribe</td></tr>
+            <tr><td style="padding:10px 16px;border-bottom:1px solid var(--border);">Multi-Currency Card</td><td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="color:var(--accent);">EMI ✅</span></td><td style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);">eToro Money + Tribe + Visa</td></tr>
+            <tr><td style="padding:10px 16px;border-bottom:1px solid var(--border);">Card / Apple Pay → IBAN</td><td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="color:var(--accent);">EMI ✅</span></td><td style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);">eToro Money</td></tr>
+            <tr><td style="padding:10px 16px;border-bottom:1px solid var(--border);">NCW Debit Card</td><td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="color:var(--accent);">EMI ✅</span></td><td style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);">NCW → IBAN → Card (fiat only on card)</td></tr>
+            <tr><td style="padding:10px 16px;border-bottom:1px solid var(--border);">IBAN for Singapore</td><td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="color:var(--accent);">EMI ✅</span></td><td style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);">Tribe + Finmo (local partner)</td></tr>
+            <tr><td style="padding:10px 16px;border-bottom:1px solid var(--border);">Spending Notifications</td><td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="color:var(--accent);">EMI ✅</span></td><td style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);">eToro Money (product feature)</td></tr>
+            <tr><td style="padding:10px 16px;border-bottom:1px solid var(--border);">Round-Up Investing</td><td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="color:#7c4dff;">EMI + Investment Entity</span></td><td style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);">EMI triggers round-up → investment entity executes trade</td></tr>
+            <tr><td style="padding:10px 16px;border-bottom:1px solid var(--border);">Savings Pockets</td><td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="color:var(--accent);">EMI ✅</span></td><td style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);">eToro Money (ring-fenced e-money)</td></tr>
+            <tr><td style="padding:10px 16px;border-bottom:1px solid var(--border);">Family Balances & Cards</td><td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="color:var(--accent);">EMI ✅</span></td><td style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);">eToro Money + Tribe</td></tr>
+            <tr><td style="padding:10px 16px;border-bottom:1px solid var(--border);">Smart Sweep</td><td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="color:#7c4dff;">EMI + Investment Entity</span></td><td style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);">EMI detects surplus → investment entity allocates</td></tr>
+            <tr><td style="padding:10px 16px;border-bottom:1px solid var(--border);">Interest on Cash</td><td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="color:#ff5252;">Requires Partner</span></td><td style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);">JPM/Citi/HSBC deposit structure or investment entity</td></tr>
+            <tr><td style="padding:10px 16px;border-bottom:1px solid var(--border);">P2P Payments</td><td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="color:var(--accent);">EMI ✅</span></td><td style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);">eToro Money (internal transfer)</td></tr>
+            <tr><td style="padding:10px 16px;border-bottom:1px solid var(--border);">International Transfers</td><td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="color:var(--accent);">EMI ✅</span></td><td style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);">eToro Money + Banking Circle / SWIFT</td></tr>
+            <tr><td style="padding:10px 16px;border-bottom:1px solid var(--border);">Personal Loans</td><td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="color:#ff5252;">Requires Partner</span></td><td style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);">Licensed lending partner</td></tr>
+            <tr><td style="padding:10px 16px;border-bottom:1px solid var(--border);">Travel Insurance</td><td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="color:#ff5252;">Requires Partner</span></td><td style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);">Licensed insurance provider</td></tr>
+            <tr><td style="padding:10px 16px;border-bottom:1px solid var(--border);">Credit Card</td><td style="padding:10px 16px;border-bottom:1px solid var(--border);"><span style="color:#ff5252;">Requires Partner</span></td><td style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);">Licensed credit issuer</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Key Insight -->
+    <div class="fade-in" style="margin-top:40px;">
+      <div style="background:var(--bg-card);border:1px solid var(--border-accent);border-radius:12px;padding:28px;">
+        <div style="font-size:1.2rem;font-weight:800;margin-bottom:12px;">The Bottom Line</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;text-align:center;margin-bottom:20px;">
+          <div style="background:var(--bg-primary);border:1px solid rgba(0,200,83,0.2);border-radius:10px;padding:16px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:1.8rem;font-weight:800;color:var(--accent);">80%</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px;">Buildable under EMI</div>
+          </div>
+          <div style="background:var(--bg-primary);border:1px solid rgba(124,77,255,0.2);border-radius:10px;padding:16px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:1.8rem;font-weight:800;color:#7c4dff;">10%</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px;">EMI + Investment Entity</div>
+          </div>
+          <div style="background:var(--bg-primary);border:1px solid rgba(255,82,82,0.2);border-radius:10px;padding:16px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:1.8rem;font-weight:800;color:#ff5252;">10%</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px;">Requires licensed partner</div>
+          </div>
+        </div>
+        <div style="color:var(--text-secondary);font-size:0.9rem;line-height:1.7;">
+          The vast majority of this plan is executable under our existing EMI licences. The features that fall outside EMI scope — interest on cash, lending, insurance, credit — are exactly the ones a tier-1 banking partner (JPM/Citi/HSBC) or licensed third-party providers solve. <span style="color:var(--text-primary);font-weight:600;">The licence is not the bottleneck. Execution is.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compliance Guardrails -->
+    <div class="fade-in" style="margin-top:40px;">
+      <h3 style="margin-bottom:16px;font-size:1.1rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;">Compliance Guardrails</h3>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;font-size:0.9rem;">
+          <span style="color:var(--accent);font-weight:700;">Safeguarding:</span> <span style="color:var(--text-secondary);">All customer funds held in segregated safeguarding accounts at ClearBank (UK) and Banking Circle (EU). This is non-negotiable under EMI regulation.</span>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;font-size:0.9rem;">
+          <span style="color:var(--accent);font-weight:700;">Settlement:</span> <span style="color:var(--text-secondary);">Prefunded scheme settlement accounts for card transactions. eToro Money does not take credit risk on card spend.</span>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;font-size:0.9rem;">
+          <span style="color:var(--accent);font-weight:700;">Crypto:</span> <span style="color:var(--text-secondary);">NCW Debit Card architecture keeps the EMI clean — NCW converts to fiat at the IBAN level; the card only sees fiat. Crypto trading and custody handled by separate eToro entities (FCA crypto registration in UK, CySEC in EU).</span>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;font-size:0.9rem;">
+          <span style="color:var(--accent);font-weight:700;">Escalation rule:</span> <span style="color:var(--text-secondary);">Any new feature that changes safeguarding mechanics, creates financial exposure, introduces new asset classes, alters fund flow architecture, or targets a new country — must go through compliance review before development begins.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Geo Expansion Licensing -->
+    <div class="fade-in" style="margin-top:40px;">
+      <h3 style="margin-bottom:16px;font-size:1.1rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;">Geo Expansion — Licence Requirements</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;">
+          <div style="font-weight:700;font-size:0.95rem;margin-bottom:8px;">🇸🇬 Singapore</div>
+          <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">IBAN via Tribe + Finmo (local payment partner). No new eToro licence required — operates through existing infrastructure with local settlement partner.</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;">
+          <div style="font-weight:700;font-size:0.95rem;margin-bottom:8px;">🇦🇪 UAE</div>
+          <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">Requires ADGM or DFSA licence assessment. Could leverage global USD card programme as a bridge while local licence is in progress.</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;">
+          <div style="font-weight:700;font-size:0.95rem;margin-bottom:8px;">🌍 Rest of World (USD Card)</div>
+          <div style="color:var(--text-secondary);font-size:0.85rem;line-height:1.6;">USD-based card for club members worldwide. Uses Visa cross-border network with existing licences and banking partners. No local issuing infrastructure required.</div>
+        </div>
+      </div>
+    </div>
+
+    <a href="#s2" class="back-to-toc">↑ Back to Table of Contents</a>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-logo">eToro Banking Strategy</div>
+    <p>Confidential — Prepared for eToro Leadership · March 2026</p>
+
+  </div>
+
+</div><!-- /main-content -->
+
+<script>
+// Password protection
+const HASH = '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'; // sha256 of 'password' placeholder
+
+function sha256(str) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(str);
+  return crypto.subtle.digest('SHA-256', data).then(buf => {
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  });
+}
+
+function checkPw() {
+  const input = document.getElementById('pw-input').value;
+  // Simple check — not security-critical, just a gate
+  if (input === 'etoro2026') {
+    document.getElementById('password-gate').classList.add('hidden');
+    document.getElementById('main-content').classList.add('visible');
+    sessionStorage.setItem('banking-auth', '1');
+    initPage();
+  } else {
+    document.getElementById('pw-error').textContent = 'Incorrect password';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+
+document.getElementById('pw-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkPw();
+});
+
+// TEMPORARILY DISABLED: Auto-bypass password gate
+document.getElementById('password-gate').classList.add('hidden');
+document.getElementById('main-content').classList.add('visible');
+setTimeout(initPage, 100);
+
+// Page initialization
+function initPage() {
+  // Scroll animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // Active nav tracking
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.side-nav a, .mobile-nav a');
+
+  const navObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        navLinks.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+        });
+      }
+    });
+  }, { threshold: 0.3 });
+
+  sections.forEach(s => navObserver.observe(s));
+
+  // Top nav shadow on scroll
+  window.addEventListener('scroll', () => {
+    document.getElementById('top-nav').classList.toggle('scrolled', window.scrollY > 20);
+  });
+}
+</script>
+</body>
+</html>
